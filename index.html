@@ -284,10 +284,10 @@ document.addEventListener('DOMContentLoaded', function() {
     Lumen <em>Insights</em>
   </div>
   <nav>
-    <button class="pill on" id="pill-analisar" onclick="goTab('analisar')">✦ Analisar</button>
-    <button class="pill" id="pill-conversar" onclick="goTab('conversar')">◈ Conversar</button>
-    <button class="pill" id="pill-historico" onclick="goTab('historico')">○ Histórico</button>
-    <button class="pill" id="pill-config" onclick="goTab('config')">◇ Config</button>
+    <button class="pill on" id="pill-analisar" onclick="goTab('analisar')">Analisar</button>
+    <button class="pill" id="pill-conversar" onclick="goTab('conversar')">Conversar</button>
+    <button class="pill" id="pill-historico" onclick="goTab('historico')">Histórico</button>
+    <button class="pill" id="pill-config" onclick="goTab('config')">Config</button>
   </nav>
 </header>
 
@@ -297,13 +297,13 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="tab on" id="analisar">
   <div class="hero">
     <h1>Transforme dados em descobertas</h1>
-    <p>Upload de entrevistas, planilhas, documentos ou áudios. A IA analisa, cruza e gera insights estruturados.</p>
+    <p>Upload de entrevistas, planilhas, documentos ou áudios.<br>A IA analisa, cruza e gera insights estruturados.</p>
   </div>
 
   <!-- PERFIL DE PESQUISA INLINE -->
   <div id="perfilBar" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:18px;box-shadow:var(--s1)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <span style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">🔬 Perfil de Pesquisa</span>
+      <span style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Perfil de Pesquisa</span>
       <button class="btn2" style="font-size:11px;padding:3px 10px" onclick="goTab('config')">⚙ Config ↗</button>
     </div>
     <!-- Hidden fields to keep saveConf/loadConf JS working -->
@@ -519,13 +519,30 @@ document.addEventListener('DOMContentLoaded', function() {
     <p style="font-size:13px;color:var(--text2)">Compare respostas do Claude e do ChatGPT lado a lado sobre suas pesquisas.</p>
   </div>
 
-  <!-- TOOLBAR -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-    <div class="arow">
-      <button class="btn2" id="btnModoSimples" onclick="setModoChat('simples')" style="font-size:12px;border-color:var(--blue);color:var(--blue);font-weight:600">◈ Somente Claude</button>
-      <button class="btn2" id="btnModoDuplo"   onclick="setModoChat('duplo')"   style="font-size:12px">⚡ Comparar com ChatGPT</button>
+  <!-- TOOLBAR: apenas seleção de modo -->
+  <div style="display:flex;align-items:center;margin-bottom:12px;gap:8px">
+    <button class="btn2" id="btnModoSimples" onclick="setModoChat('simples')" style="font-size:12px;border-color:var(--blue);color:var(--blue);font-weight:600;background:var(--blue-light)">Somente Claude</button>
+    <button class="btn2" id="btnModoDuplo"   onclick="setModoChat('duplo')"   style="font-size:12px;color:var(--text);border-color:var(--border)">Comparar com ChatGPT</button>
+  </div>
+
+  <!-- HISTÓRICO DE CONVERSAS (collapsible) -->
+  <div id="histConvPanel" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:var(--s1)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <span style="font-size:13px;font-weight:700;color:var(--text)">Histórico de Conversas</span>
+      <div class="arow">
+        <label class="cblbl"><input type="checkbox" id="selAllConv" onchange="togSelAllConv(this)"> Todos</label>
+        <span id="selctConv" style="font-size:12px;color:var(--text3)"></span>
+        <button class="btnd" id="btnDelConv" onclick="delSelConv()" disabled style="font-size:11px;padding:4px 10px">🗑 Excluir selecionadas</button>
+        <button class="btn2" onclick="limparTodasConversas()" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:var(--red)">🗑 Limpar tudo</button>
+      </div>
     </div>
-    <button class="btn" onclick="openModal('mC')">⬇ Salvar Conversa</button>
+    <div id="histConvList">
+      <div class="empty-state" style="padding:24px">
+        <div class="empty-icon" style="font-size:28px">💬</div>
+        <h3 style="font-size:14px">Nenhuma conversa salva</h3>
+        <p>Clique em "Salvar Conversa" após um chat para guardar aqui.</p>
+      </div>
+    </div>
   </div>
 
   <!-- CHAT DUPLO -->
@@ -568,13 +585,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
   </div><!-- end chatDuploWrap -->
 
-  <!-- INPUT COMPARTILHADO -->
+  <!-- INPUT + BOTÕES ABAIXO -->
   <div style="margin-top:12px">
     <div class="chat-inp" style="border:1.5px solid var(--border);border-radius:var(--rs)">
-      <input type="text" id="cinp" placeholder="Faça uma pergunta — enviada para Claude e ChatGPT simultaneamente..." onkeydown="if(event.key==='Enter')chat()" style="border:none;background:transparent">
+      <input type="text" id="cinp" placeholder="Faça uma pergunta..." onkeydown="if(event.key==='Enter')chat()" style="border:none;background:transparent">
       <button onclick="chat()" style="background:var(--blue);color:#fff;border:none;border-radius:var(--rs);padding:10px 16px;font-size:15px;cursor:pointer;font-weight:700">→</button>
     </div>
-    <div id="chatModoBadge" style="font-size:11px;color:var(--text3);margin-top:5px;text-align:center">Modo: somente Claude</div>
+    <div id="chatModoBadge" style="font-size:11px;color:var(--text3);margin-top:5px;margin-bottom:10px;text-align:center">Modo: somente Claude</div>
+    <!-- Botões de ação abaixo do campo -->
+    <div class="arow" style="justify-content:flex-end">
+      <button class="btn2" onclick="novaConversa()" style="font-size:12px">Nova Conversa</button>
+      <button class="btn2" onclick="salvarConversa()" style="font-size:12px">Salvar Conversa</button>
+      <button class="btn2" onclick="toggleHistConv()" id="btnHistConv" style="font-size:12px">Histórico</button>
+      <button class="btn" onclick="openModal('mC')">⬇ Exportar</button>
+    </div>
   </div>
 </div>
 
@@ -653,7 +677,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div><div class="slbl">Anthropic</div><div class="sdesc">Créditos disponíveis na API</div></div>
       <div style="display:flex;align-items:center;gap:8px">
         <span id="saldoAnthr" style="font-size:13px;color:var(--text3)">—</span>
-        <button class="btn2" style="font-size:11px;padding:4px 10px" onclick="verificarSaldoAnthr()">Verificar</button>
+        <a href="https://console.anthropic.com/settings/billing" target="_blank" class="btn2" style="font-size:11px;padding:4px 10px;text-decoration:none">Verificar ↗</a>
         <a href="https://console.anthropic.com/settings/billing" target="_blank" class="btn2" style="font-size:11px;padding:4px 10px;text-decoration:none">Recarregar ↗</a>
       </div>
     </div>
@@ -661,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div><div class="slbl">OpenAI (Whisper)</div><div class="sdesc">Créditos disponíveis na API</div></div>
       <div style="display:flex;align-items:center;gap:8px">
         <span id="saldoOpenai" style="font-size:13px;color:var(--text3)">—</span>
-        <button class="btn2" style="font-size:11px;padding:4px 10px" onclick="verificarSaldoOpenai()">Verificar</button>
+        <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" class="btn2" style="font-size:11px;padding:4px 10px;text-decoration:none">Verificar ↗</a>
         <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" class="btn2" style="font-size:11px;padding:4px 10px;text-decoration:none">Recarregar ↗</a>
       </div>
     </div>
@@ -693,11 +717,22 @@ document.addEventListener('DOMContentLoaded', function() {
     <button class="mcan" onclick="closeModal('mA')">Cancelar</button>
   </div>
 </div>
+<!-- MODAL: Exportar conversa do histórico -->
+<div class="modal" id="mExpConv">
+  <div class="mbox">
+    <h3>Exportar conversa</h3><p>Escolha o formato do arquivo</p>
+    <button class="mopt" onclick="expConvDo('rtf')"><span class="mico">📝</span><div><div class="mtit">Word (.doc)</div><div class="mdesc">Editável no Word e Google Docs</div></div></button>
+    <button class="mopt" onclick="expConvDo('pdf')"><span class="mico">📄</span><div><div class="mtit">PDF</div><div class="mdesc">Pronto para compartilhar e imprimir</div></div></button>
+    <button class="mcan" onclick="closeModal('mExpConv')">Cancelar</button>
+  </div>
+</div>
+
 <div class="modal" id="mC">
   <div class="mbox">
-    <h3>Salvar conversa como...</h3><p>Escolha o formato do arquivo</p>
+    <h3>Exportar conversa atual</h3><p>Escolha o formato do arquivo</p>
     <button class="mopt" onclick="exp('rtf','c')"><span class="mico">📝</span><div><div class="mtit">Word (.doc)</div><div class="mdesc">Editável no Word e Google Docs</div></div></button>
     <button class="mopt" onclick="exp('pdf','c')"><span class="mico">📄</span><div><div class="mtit">PDF</div><div class="mdesc">Pronto para compartilhar e imprimir</div></div></button>
+    <button class="mopt" onclick="copiarConversaAtual()"><span class="mico">📋</span><div><div class="mtit">Copiar texto</div><div class="mdesc">Copia o conteúdo para a área de transferência</div></div></button>
     <button class="mcan" onclick="closeModal('mC')">Cancelar</button>
   </div>
 </div>
@@ -1628,6 +1663,24 @@ function copyFallback(text) {
 function openModal(id) { document.getElementById(id).classList.add('on'); }
 function closeModal(id) { document.getElementById(id).classList.remove('on'); }
 
+function copiarConversaAtual() {
+  closeModal('mC');
+  var parts = [];
+  if (S.chatHist.length) {
+    parts.push('=== CLAUDE ===\n' + S.chatHist.map(function(m) {
+      return (m.role==='user'?'VOCÊ':'CLAUDE') + ':\n' + m.content;
+    }).join('\n\n---\n\n'));
+  }
+  if (S_gptHist.length) {
+    parts.push('=== CHATGPT ===\n' + S_gptHist.map(function(m) {
+      return (m.role==='user'?'VOCÊ':'CHATGPT') + ':\n' + m.content;
+    }).join('\n\n---\n\n'));
+  }
+  var txt = parts.join('\n\n' + '='.repeat(40) + '\n\n');
+  if (!txt) { toast('Nenhuma conversa disponível.'); return; }
+  copiarTexto(txt, '\u2713 Conversa copiada!');
+}
+
 function exp(fmt, src) {
   closeModal('mA'); closeModal('mC'); closeModal('mResumo');
   const date = new Date().toLocaleDateString('pt-BR');
@@ -1672,22 +1725,31 @@ function saveRTF(title, text, date) {
 }
 
 function savePDF(title, text, date) {
-  const lines = text.split('\n').map(l => {
+  var lines = text.split('\n').map(function(l) {
     if (/^#{1,2}\s/.test(l)) return '<h2>' + escHtml(l.replace(/^#+\s*/,'')) + '</h2>';
     if (/^\*\*[^*]+\*\*\s*$/.test(l)) return '<h2>' + escHtml(l.replace(/\*\*/g,'')) + '</h2>';
     if (!l.trim()) return '<br>';
     return '<p>' + l.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>') + '</p>';
   }).join('');
-  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${escHtml(title)}</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:13px;color:#0f172a;padding:44px 50px;line-height:1.7}
-.h{border-bottom:3px solid #2563eb;padding-bottom:13px;margin-bottom:24px}.h h1{font-size:19px;font-weight:700;color:#2563eb}.h p{font-size:12px;color:#64748b;margin-top:3px}
-h2{font-size:14px;font-weight:700;color:#2563eb;margin:20px 0 7px;border-left:4px solid #2563eb;padding-left:9px}
-p{margin-bottom:7px;color:#334155}strong{color:#0f172a}@media print{body{padding:28px 36px}}</style>
-</head><body><div class="h"><h1>${escHtml(title)}</h1><p>Gerado em ${date}</p></div>${lines}</body></html>`;
-  const win = window.open('', '_blank');
-  if (!win) { toast('⚠ Permita pop-ups para gerar PDF.'); return; }
-  win.document.write(html); win.document.close();
-  setTimeout(() => { win.focus(); win.print(); }, 700);
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>' + escHtml(title) + '</title>'
+    + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:13px;color:#0f172a;padding:44px 50px;line-height:1.7}'
+    + '.h{border-bottom:3px solid #2563eb;padding-bottom:13px;margin-bottom:24px}.h h1{font-size:19px;font-weight:700;color:#2563eb}.h p{font-size:12px;color:#64748b;margin-top:3px}'
+    + 'h2{font-size:14px;font-weight:700;color:#2563eb;margin:20px 0 7px;border-left:4px solid #2563eb;padding-left:9px}'
+    + 'p{margin-bottom:7px;color:#334155}strong{color:#0f172a}@media print{body{padding:28px 36px}}</style>'
+    + '</head><body><div class="h"><h1>' + escHtml(title) + '</h1><p>Gerado em ' + date + '</p></div>' + lines + '</body></html>';
+  // Download as .html file (opens in browser, user can print to PDF)
+  // Using blob avoids window.open() which is blocked in Wix iframes
+  var blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href     = url;
+  a.download = (title.replace(/[^a-zA-Z0-9À-ÿ\s]/g,'').replace(/\s+/g,'_').slice(0,40) || 'lumen') + '_' + Date.now() + '.html';
+  a.target   = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('\u2713 Arquivo HTML gerado! Abra e use Ctrl+P para salvar como PDF.');
 }
 
 function dl(blob, name) {
@@ -1695,6 +1757,253 @@ function dl(blob, name) {
   a.href = url; a.download = name;
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function novaConversa() {
+  // Clear state — no confirm() as it's blocked inside Wix iframes
+  S.chatHist.length = 0;
+  S_gptHist.length  = 0;
+
+  // Reset Claude panel
+  document.getElementById('msgs').innerHTML =
+    '<div class="bubble a" style="opacity:1;transform:none">' +
+    'Olá! Pronta para responder sobre seus dados.<br><br>' +
+    'Exemplos: <em>"Quais temas foram mais recorrentes?"</em> · <em>"Existe relação entre X e Y?"</em><br><br>' +
+    'Faça o upload e análise na aba <strong>Analisar</strong> primeiro.</div>';
+
+  // Reset GPT panel
+  document.getElementById('msgsGpt').innerHTML =
+    '<div class="bubble a" style="opacity:1;transform:none;border-left:3px solid #10a37f">' +
+    'ChatGPT pronto para responder em paralelo.<br><br>' +
+    'Configure sua <strong>API key da OpenAI</strong> em Config para ativar.<br><br>' +
+    'As mesmas perguntas enviadas ao Claude serão automaticamente enviadas ao ChatGPT.</div>';
+
+  document.getElementById('cinp').value = '';
+  toast('✓ Nova conversa iniciada.');
+}
+
+// ── HISTÓRICO DE CONVERSAS ────────────────────────────────────────
+function toggleHistConv() {
+  const panel = document.getElementById('histConvPanel');
+  const btn   = document.getElementById('btnHistConv');
+  const open  = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  btn.style.cssText = open
+    ? 'font-size:12px;border-color:var(--blue);color:var(--blue);background:var(--blue-light);font-weight:600'
+    : 'font-size:12px';
+  if (open) renderHistConv();
+}
+
+function salvarConversa() {
+  if (!S.chatHist.length && !S_gptHist.length) { toast('Nenhuma conversa para salvar.'); return; }
+  const now  = new Date();
+  const item = {
+    id:      now.getTime(),
+    date:    now.toLocaleDateString('pt-BR'),
+    time:    now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }),
+    title:   'Conversa — ' + now.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }),
+    modo:    chatModo,
+    claude:  S.chatHist.slice(),
+    gpt:     S_gptHist.slice(),
+  };
+  const hist = loadHistConvData();
+  hist.unshift(item);
+  localStorage.setItem('lh_conv', JSON.stringify(hist));
+  renderHistConv();
+  // Show panel
+  const panel = document.getElementById('histConvPanel');
+  if (panel.style.display === 'none') toggleHistConv();
+  toast('✓ Conversa salva no histórico!');
+}
+
+function expConv(sid) {
+  const hist = loadHistConvData();
+  const item = hist.find(function(h) { return String(h.id) === String(sid); });
+  if (!item) { toast('Conversa não encontrada.'); return; }
+  const date = item.date + ' ' + item.time;
+  let parts = [];
+  if (item.claude && item.claude.length) {
+    parts.push('=== CLAUDE ===\n' + item.claude.map(function(m) {
+      return (m.role === 'user' ? 'VOCÊ' : 'CLAUDE') + ':\n' + m.content;
+    }).join('\n\n---\n\n'));
+  }
+  if (item.gpt && item.gpt.length) {
+    parts.push('=== CHATGPT ===\n' + item.gpt.map(function(m) {
+      return (m.role === 'user' ? 'VOCÊ' : 'CHATGPT') + ':\n' + m.content;
+    }).join('\n\n---\n\n'));
+  }
+  const txt = parts.join('\n\n' + '='.repeat(40) + '\n\n');
+  // Store temporarily and open export modal
+  window._expConvTemp = { title: item.title, content: txt, date: date };
+  openModal('mExpConv');
+}
+
+function expConvDo(fmt) {
+  closeModal('mExpConv');
+  var tmp = window._expConvTemp;
+  if (!tmp) return;
+  var title = tmp.title || 'Conversa';
+  var date  = tmp.date  || new Date().toLocaleDateString('pt-BR');
+  if (fmt === 'rtf') saveRTF(title, tmp.content, date);
+  else               savePDF(title, tmp.content, date);
+  window._expConvTemp = null;
+}
+
+function limparTodasConversas() {
+  localStorage.removeItem('lh_conv');
+  renderHistConv();
+  toast('✓ Todas as conversas excluídas.');
+}
+
+function loadHistConvData() {
+  try { return JSON.parse(localStorage.getItem('lh_conv') || '[]'); } catch(e) { return []; }
+}
+
+function renderHistConv() {
+  const list = document.getElementById('histConvList');
+  const data = loadHistConvData();
+  if (!data.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:24px"><h3 style="font-size:14px;margin-bottom:6px">Nenhuma conversa salva</h3><p>Clique em "Salvar Conversa" após um chat para guardar aqui.</p></div>';
+    document.getElementById('selAllConv').checked = false;
+    document.getElementById('btnDelConv').disabled = true;
+    document.getElementById('selctConv').textContent = '';
+    return;
+  }
+  list.innerHTML = data.map(function(item) {
+    const msgs   = item.claude ? item.claude.length : 0;
+    const hasgpt = item.gpt && item.gpt.length > 0;
+    const badge  = hasgpt
+      ? '<span style="font-size:10px;font-weight:600;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:2px 7px;border-radius:20px;margin-left:6px">Claude + GPT</span>'
+      : '<span style="font-size:10px;font-weight:600;background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid);padding:2px 7px;border-radius:20px;margin-left:6px">Claude</span>';
+    // Use string ID consistently
+    const sid = String(item.id);
+    return '<div class="hitem" id="hconv-' + sid + '" style="margin-bottom:7px">'
+      + '<input type="checkbox" value="' + sid + '" onchange="onCbConv()">'
+      + '<div class="hitem-info" onclick="carregarConversa(\'' + sid + '\')" style="flex:1;cursor:pointer">'
+      + '<h4 style="font-size:13px;font-weight:600;margin-bottom:2px">' + escHtml(item.title) + badge + '</h4>'
+      + '<p style="font-size:11px;color:var(--text3)">' + item.date + ' às ' + item.time + ' · ' + Math.floor(msgs/2) + ' pergunta(s)</p>'
+      + '</div>'
+      + '<div style="display:flex;gap:5px;flex-shrink:0">'
+      + '<button class="btn2" style="font-size:11px;padding:4px 10px" onclick="expConv(\'' + sid + '\')" title="Exportar">⬇</button>'
+      + '<button class="btn2" style="font-size:11px;padding:4px 10px" onclick="renomearConv(\'' + sid + '\')" title="Renomear">Renomear</button>'
+      + '<button class="btnd" style="font-size:11px;padding:4px 10px" onclick="delItemConv(\'' + sid + '\')" title="Excluir">🗑</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  onCbConv();
+}
+
+function onCbConv() {
+  const all = document.querySelectorAll('#histConvList input[type=checkbox]');
+  const sel = document.querySelectorAll('#histConvList input[type=checkbox]:checked');
+  document.getElementById('selctConv').textContent = sel.length ? sel.length + ' selecionada(s)' : '';
+  document.getElementById('btnDelConv').disabled = !sel.length;
+  document.getElementById('selAllConv').checked = all.length > 0 && sel.length === all.length;
+  all.forEach(function(cb) {
+    const row = document.getElementById('hconv-' + cb.value);
+    if (row) row.classList.toggle('sel', cb.checked);
+  });
+}
+
+function togSelAllConv(cb) {
+  document.querySelectorAll('#histConvList input[type=checkbox]').forEach(function(c) { c.checked = cb.checked; });
+  onCbConv();
+}
+
+function delItemConv(sid) {
+  // No confirm() — it gets blocked in iframes. Use inline confirmation via toast + undo pattern
+  const hist = loadHistConvData().filter(function(h) { return String(h.id) !== String(sid); });
+  localStorage.setItem('lh_conv', JSON.stringify(hist));
+  renderHistConv();
+  toast('✓ Conversa excluída.');
+}
+
+function delSelConv() {
+  const ids = Array.from(document.querySelectorAll('#histConvList input[type=checkbox]:checked')).map(function(c) { return String(c.value); });
+  if (!ids.length) return;
+  const hist = loadHistConvData().filter(function(h) { return !ids.includes(String(h.id)); });
+  localStorage.setItem('lh_conv', JSON.stringify(hist));
+  renderHistConv();
+  toast('✓ ' + ids.length + ' conversa(s) excluída(s).');
+}
+
+function renomearConv(sid) {
+  var hist = loadHistConvData();
+  var item = hist.find(function(h) { return String(h.id) === String(sid); });
+  if (!item) return;
+  // Always use inline editing — prompt() and confirm() are blocked in Wix iframes
+  var row = document.getElementById('hconv-' + sid);
+  if (!row) return;
+  var h4 = row.querySelector('h4');
+  if (!h4) return;
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.value = item.title;
+  inp.style.cssText = 'font-size:13px;font-weight:600;border:1.5px solid var(--blue);border-radius:5px;padding:4px 10px;width:220px;font-family:Inter,sans-serif;outline:none;background:#fff';
+  h4.innerHTML = '';
+  h4.appendChild(inp);
+  inp.focus(); inp.select();
+  var saved = false;
+  function saveInline() {
+    if (saved) return; saved = true;
+    var v = inp.value.trim();
+    if (v && v !== item.title) {
+      item.title = v;
+      localStorage.setItem('lh_conv', JSON.stringify(hist));
+      toast('✓ Conversa renomeada!');
+    }
+    renderHistConv();
+  }
+  inp.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveInline(); }
+    if (e.key === 'Escape') { saved = true; renderHistConv(); }
+  });
+  inp.addEventListener('blur', saveInline);
+}
+
+function carregarConversa(sid) {
+  const hist = loadHistConvData();
+  const item = hist.find(function(h) { return String(h.id) === String(sid); });
+  if (!item) return;
+
+  // Restore histories
+  S.chatHist.length = 0;
+  (item.claude || []).forEach(function(m) { S.chatHist.push(m); });
+  S_gptHist.length = 0;
+  (item.gpt || []).forEach(function(m) { S_gptHist.push(m); });
+
+  // Rebuild Claude UI
+  const msgsEl = document.getElementById('msgs');
+  msgsEl.innerHTML = '';
+  S.chatHist.forEach(function(m) {
+    const b = document.createElement('div');
+    b.className = 'bubble ' + (m.role === 'user' ? 'u' : 'a');
+    b.innerHTML = m.content.replace(/\n/g, '<br>');
+    b.style.opacity = '1'; b.style.transform = 'none';
+    msgsEl.appendChild(b);
+  });
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+
+  // Rebuild GPT UI if present
+  if (item.gpt && item.gpt.length) {
+    setModoChat('duplo');
+    const msgsGptEl = document.getElementById('msgsGpt');
+    msgsGptEl.innerHTML = '';
+    S_gptHist.forEach(function(m) {
+      const b = document.createElement('div');
+      b.className = 'bubble ' + (m.role === 'user' ? 'u' : 'a');
+      b.innerHTML = m.content.replace(/\n/g, '<br>');
+      if (m.role === 'assistant') b.style.borderLeft = '3px solid #10a37f';
+      b.style.opacity = '1'; b.style.transform = 'none';
+      msgsGptEl.appendChild(b);
+    });
+    msgsGptEl.scrollTop = msgsGptEl.scrollHeight;
+  }
+
+  // Close panel
+  const panel = document.getElementById('histConvPanel');
+  if (panel.style.display !== 'none') toggleHistConv();
+  toast('✓ Conversa carregada!');
 }
 
 // ── CHAT MODE ────────────────────────────────────────────────────
@@ -1714,10 +2023,10 @@ function setModoChat(modo) {
     : 'Faça uma pergunta sobre sua pesquisa...';
   document.getElementById('btnModoSimples').style.cssText = !isDuplo
     ? 'font-size:12px;border-color:var(--blue);color:var(--blue);font-weight:600;background:var(--blue-light)'
-    : 'font-size:12px';
+    : 'font-size:12px;color:var(--text);border-color:var(--border);background:var(--bg)';
   document.getElementById('btnModoDuplo').style.cssText = isDuplo
-    ? 'font-size:12px;border-color:#10a37f;color:#10a37f;font-weight:600;background:#f0fdf4'
-    : 'font-size:12px';
+    ? 'font-size:12px;border-color:var(--blue);color:var(--blue);font-weight:600;background:var(--blue-light)'
+    : 'font-size:12px;color:var(--text);border-color:var(--border);background:var(--bg)';
   // Warn if duplo mode but no OpenAI key
   if (isDuplo) {
     const ok = document.getElementById('ok').value.trim();
@@ -1924,8 +2233,8 @@ function togSelAll(cb) {
 }
 
 function delItem(id) {
-  if (!confirm('Excluir esta análise?')) return;
-  S.history = S.history.filter(h => h.id !== id);
+  const hist2 = S.history.filter(function(h) { return h.id !== id; });
+  S.history = hist2;
   localStorage.setItem('lh', JSON.stringify(S.history));
   renderHist(); toast('✓ Análise excluída.');
 }
@@ -1933,7 +2242,6 @@ function delItem(id) {
 function delSel() {
   const ids = Array.from(document.querySelectorAll('#hlist input[type=checkbox]:checked')).map(c => Number(c.value));
   if (!ids.length) return;
-  if (!confirm('Excluir ' + ids.length + ' análise(s)?')) return;
   S.history = S.history.filter(h => !ids.includes(h.id));
   localStorage.setItem('lh', JSON.stringify(S.history));
   renderHist(); toast('✓ ' + ids.length + ' análise(s) excluída(s).');
