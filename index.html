@@ -13,6 +13,8 @@ function sendHeight() {
 }
 // Send height on load and on any DOM changes
 window.addEventListener('load', function() {
+  // Check password protection first
+  initPasswordProtection();
   sendHeight();
   var obs = new MutationObserver(sendHeight);
   obs.observe(document.body, { childList: true, subtree: true, attributes: true });
@@ -341,6 +343,23 @@ textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);
 </head>
 <body>
 <div id="toast"></div>
+
+<!-- TELA DE SENHA -->
+<div id="pwdScreen" style="display:none;position:fixed;inset:0;background:#f8fafc;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(37,99,235,.12);text-align:center">
+    <div style="width:52px;height:52px;background:#eff6ff;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:24px">🔒</div>
+    <h2 style="font-size:20px;font-weight:700;color:#0f172a;margin-bottom:6px">Lumen Insights</h2>
+    <p style="font-size:13px;color:#64748b;margin-bottom:24px">Digite a senha para acessar</p>
+    <input type="password" id="pwdInput"
+      placeholder="Senha de acesso..."
+      style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:11px 14px;font-family:Inter,sans-serif;font-size:14px;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center;letter-spacing:2px"
+      onkeydown="if(event.key==='Enter')checkPwd()"
+      onfocus="this.style.borderColor='#2563eb'"
+      onblur="this.style.borderColor='#e2e8f0'">
+    <div id="pwdError" style="font-size:12px;color:#dc2626;margin-bottom:10px;min-height:16px"></div>
+    <button onclick="checkPwd()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:11px;font-family:Inter,sans-serif;font-size:14px;font-weight:600;cursor:pointer">Entrar</button>
+  </div>
+</div>
 <!-- SVG filter for sketch/hand-drawn effect -->
 <svg width="0" height="0" style="position:absolute">
   <defs>
@@ -777,6 +796,27 @@ document.addEventListener('DOMContentLoaded', function() {
     <button class="btn" onclick="testConn()">⚡ Testar conexão</button>
     <span id="tres" style="font-size:13px;display:none"></span>
   </div>
+
+  <div class="scard" style="border:1.5px solid var(--blue-mid)">
+    <h3>🔒 Proteção por Senha</h3>
+    <div class="srow">
+      <div>
+        <div class="slbl">Senha de acesso</div>
+        <div class="sdesc">Deixe em branco para desativar a proteção</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="password" class="sinp" id="accessPwd" placeholder="Digite a senha..." oninput="saveConf()" style="width:180px">
+        <button class="btn2" style="font-size:11px;padding:6px 10px" onclick="togglePwdView()">👁</button>
+      </div>
+    </div>
+    <div class="srow" style="border-bottom:none;padding-bottom:0">
+      <div>
+        <div class="slbl">Status</div>
+        <div class="sdesc">Exibe tela de senha ao abrir o Lumen</div>
+      </div>
+      <span id="pwdStatus" style="font-size:12px;font-weight:600;color:var(--text3)">Proteção desativada</span>
+    </div>
+  </div>
 </div>
 
 </main>
@@ -868,6 +908,84 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
+// ── PASSWORD PROTECTION ──────────────────────────────────────────
+var PWD_KEY   = 'lumen_pwd_hash';
+var PWD_AUTH  = 'lumen_authed';
+var PWD_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+function hashPwd(str) {
+  // Simple hash — enough for client-side protection
+  var h = 0;
+  for (var i = 0; i < str.length; i++) {
+    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  }
+  return String(h >>> 0);
+}
+
+function initPasswordProtection() {
+  var conf = JSON.parse(localStorage.getItem('lc') || '{}');
+  var pwd  = conf.accessPwd || '';
+  if (!pwd) {
+    // No password set — show app normally
+    document.getElementById('pwdScreen').style.display = 'none';
+    updatePwdStatus(false);
+    return;
+  }
+  // Check if already authenticated
+  var auth = JSON.parse(localStorage.getItem(PWD_AUTH) || 'null');
+  if (auth && auth.hash === hashPwd(pwd) && (Date.now() - auth.ts) < PWD_EXPIRY) {
+    document.getElementById('pwdScreen').style.display = 'none';
+    updatePwdStatus(true);
+    return;
+  }
+  // Show password screen
+  document.getElementById('pwdScreen').style.display = 'flex';
+  setTimeout(function() {
+    var inp = document.getElementById('pwdInput');
+    if (inp) inp.focus();
+  }, 100);
+  updatePwdStatus(true);
+}
+
+function checkPwd() {
+  var inp  = document.getElementById('pwdInput');
+  var err  = document.getElementById('pwdError');
+  var conf = JSON.parse(localStorage.getItem('lc') || '{}');
+  var pwd  = conf.accessPwd || '';
+  if (!inp || !pwd) { document.getElementById('pwdScreen').style.display = 'none'; return; }
+  if (inp.value === pwd) {
+    // Correct — save auth token and hide screen
+    localStorage.setItem(PWD_AUTH, JSON.stringify({ hash: hashPwd(pwd), ts: Date.now() }));
+    document.getElementById('pwdScreen').style.display = 'none';
+    err.textContent = '';
+    inp.value = '';
+  } else {
+    err.textContent = 'Senha incorreta. Tente novamente.';
+    inp.value = '';
+    inp.focus();
+    inp.style.borderColor = '#dc2626';
+    setTimeout(function() { inp.style.borderColor = '#e2e8f0'; }, 1500);
+  }
+}
+
+function updatePwdStatus(active) {
+  var el = document.getElementById('pwdStatus');
+  if (!el) return;
+  if (active) {
+    el.textContent = 'Proteção ativa';
+    el.style.color = 'var(--ok)';
+  } else {
+    el.textContent = 'Proteção desativada';
+    el.style.color = 'var(--text3)';
+  }
+}
+
+function togglePwdView() {
+  var inp = document.getElementById('accessPwd');
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
 // ── MODEL HELPER ─────────────────────────────────────────────────
 function getModel() {
   const el = document.getElementById('modelo');
@@ -2931,8 +3049,14 @@ function saveConf() {
     area: document.getElementById('pArea')?.value || document.getElementById('area').value,
     met:  document.getElementById('pMet')?.value  || document.getElementById('met').value,
     nome: document.getElementById('pNome')?.value || document.getElementById('nome').value,
-    lang: document.getElementById('lang').value
+    lang:      document.getElementById('lang').value,
+    accessPwd: document.getElementById('accessPwd') ? document.getElementById('accessPwd').value : ''
   }));
+  // Update password status badge
+  var pwd = document.getElementById('accessPwd') ? document.getElementById('accessPwd').value : '';
+  updatePwdStatus(!!pwd);
+  // Invalidate any existing auth if password changed
+  localStorage.removeItem(PWD_AUTH);
 }
 
 function loadConf() {
@@ -2947,6 +3071,11 @@ function loadConf() {
     if (c.lang) document.getElementById('lang').value = c.lang;
   } catch(e) {}
   syncPerfilBar();
+  // Restore password field
+  if (typeof c !== 'undefined' && c.accessPwd) {
+    var apwd = document.getElementById('accessPwd');
+    if (apwd) apwd.value = c.accessPwd;
+  }
   setTimeout(atualizarModeloBadge, 100);
   // Make Config fields sync back to perfil bar in real time
   ['area','met','nome'].forEach(id => {
