@@ -797,6 +797,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <span id="tres" style="font-size:13px;display:none"></span>
   </div>
 
+  <div style="height:11px"></div>
+
   <div class="scard" style="border:1.5px solid var(--blue-mid)">
     <h3>🔒 Proteção por Senha</h3>
     <div class="srow">
@@ -911,7 +913,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── PASSWORD PROTECTION ──────────────────────────────────────────
 var PWD_KEY   = 'lumen_pwd_hash';
 var PWD_AUTH  = 'lumen_authed';
-var PWD_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 days
+var PWD_EXPIRY = 1 * 60 * 1000; // 1 minute
 
 function hashPwd(str) {
   // Simple hash — enough for client-side protection
