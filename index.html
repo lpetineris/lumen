@@ -762,16 +762,9 @@ document.addEventListener('DOMContentLoaded', function() {
       <input type="password" class="sinp" id="ok" placeholder="sk-..." oninput="saveConf()">
     </div>
   </div>
-  <div class="scard">
-    <h3>🌐 Idioma</h3>
-    <div class="srow">
-      <div><div class="slbl">Idioma dos relatórios</div></div>
-      <select class="sinp" id="lang" onchange="saveConf()">
-        <option value="pt">Português (BR)</option>
-        <option value="en">English</option>
-        <option value="es">Español</option>
-      </select>
-    </div>
+  <div class="arow" style="margin-bottom:11px">
+    <button class="btn" onclick="testConn()">⚡ Testar conexão</button>
+    <span id="tres" style="font-size:13px;display:none"></span>
   </div>
   <div class="scard">
     <h3>💰 Saldo de Créditos</h3>
@@ -792,12 +785,17 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
   </div>
-  <div class="arow">
-    <button class="btn" onclick="testConn()">⚡ Testar conexão</button>
-    <span id="tres" style="font-size:13px;display:none"></span>
+  <div class="scard">
+    <h3>🌐 Idioma</h3>
+    <div class="srow">
+      <div><div class="slbl">Idioma dos relatórios</div></div>
+      <select class="sinp" id="lang" onchange="saveConf()">
+        <option value="pt">Português (BR)</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+      </select>
+    </div>
   </div>
-
-  <div style="height:11px"></div>
 
   <div class="scard" style="border:1.5px solid var(--blue-mid)">
     <h3>🔒 Proteção por Senha</h3>
@@ -1299,7 +1297,25 @@ async function analisar() {
     } catch(e) { fc += '\n\n=== ARQUIVO: ' + f._name + ' (não lido) ==='; }
   }
 
-  const content = (ptxt + fc).trim();
+  let rawContent = (ptxt + fc).trim();
+
+  // ── LIMITE DE TOKENS ──────────────────────────────────────────────
+  // Claude suporta ~1M tokens. Cada token ≈ 4 chars.
+  // Reservamos ~100k tokens para prompt/instruções → ~900k tokens para dados = ~3.6M chars
+  const MAX_CHARS = 3900000; // ~975k tokens — limite máximo do Claude (1M tokens)
+  let truncated = false;
+  if (rawContent.length > MAX_CHARS) {
+    rawContent = rawContent.slice(0, MAX_CHARS);
+    truncated = true;
+    const lastBreak = rawContent.lastIndexOf('\n\n');
+    if (lastBreak > MAX_CHARS * 0.9) rawContent = rawContent.slice(0, lastBreak);
+    rawContent += '\n\n[... conteúdo truncado por exceder o limite de tamanho ...]';
+  }
+
+  const content = rawContent;
+  if (truncated) {
+    toast('⚠ Conteúdo muito grande — truncado automaticamente. Considere dividir em partes.', 6000);
+  }
   const ctx = document.getElementById('ctx').value.trim();
   const area = document.getElementById('pArea')?.value || document.getElementById('area').value;
   const met  = document.getElementById('pMet')?.value  || document.getElementById('met').value;
@@ -2780,21 +2796,28 @@ function salvarEdit() {
 // ── CONTADOR DE TOKENS ───────────────────────────────────────────
 function estimarTokens() {
   const ptxt = document.getElementById('ptxt').value;
-  const ctx = document.getElementById('ctx').value;
-  let total = ptxt.length + ctx.length;
+  const ctx  = document.getElementById('ctx').value;
+  let total  = ptxt.length + ctx.length;
   S.files.forEach(f => {
     if (f._status === 'done') total += f._tx?.length || 0;
+    else total += f._size || 0;
   });
-  // ~4 chars per token, output ~1000 tokens, price $3/$15 per 1M in/out (Sonnet 4.6)
-  const inputTk = Math.round(total / 4);
+  const inputTk  = Math.round(total / 4);
   const outputTk = 1000;
-  const custo = ((inputTk * 3 + outputTk * 15) / 1_000_000);
-  const bar = document.getElementById('tokenBar');
+  const custo    = ((inputTk * 3 + outputTk * 15) / 1_000_000);
+  const bar      = document.getElementById('tokenBar');
+  const MAX_TK   = 975000; // ~3.9M chars — limite máximo antes do truncamento
   if (total > 100) {
     bar.style.display = 'flex';
-    document.getElementById('tkTokens').textContent = inputTk.toLocaleString('pt-BR') + ' tokens entrada';
-    document.getElementById('tkCusto').textContent = '~$' + custo.toFixed(4);
-    document.getElementById('tkPags').textContent = '≈ ' + Math.round(total / 2000) + ' pág. A4';
+    const overLimit = inputTk > MAX_TK;
+    document.getElementById('tkTokens').textContent  = inputTk.toLocaleString('pt-BR') + ' tokens entrada';
+    document.getElementById('tkTokens').style.color  = overLimit ? 'var(--red)' : 'var(--text)';
+    document.getElementById('tkCusto').textContent   = '~$' + custo.toFixed(4);
+    document.getElementById('tkCusto').style.color   = overLimit ? 'var(--red)' : 'var(--ok)';
+    document.getElementById('tkPags').textContent    = overLimit
+      ? '⚠ Muito grande — será truncado automaticamente'
+      : '≈ ' + Math.round(total / 2000) + ' pág. A4';
+    document.getElementById('tkPags').style.color    = overLimit ? 'var(--red)' : 'var(--text2)';
   } else {
     bar.style.display = 'none';
   }
