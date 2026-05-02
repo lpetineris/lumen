@@ -803,20 +803,33 @@ document.addEventListener('DOMContentLoaded', function() {
     <h3>🔒 Proteção por Senha</h3>
     <div class="srow">
       <div>
-        <div class="slbl">Senha de acesso</div>
+        <div class="slbl">Nova senha</div>
         <div class="sdesc">Deixe em branco para desativar a proteção</div>
       </div>
       <div style="display:flex;gap:6px;align-items:center">
-        <input type="password" class="sinp" id="accessPwd" placeholder="Digite a senha..." oninput="saveConf()" style="width:180px">
+        <input type="password" class="sinp" id="accessPwd" placeholder="Digite a senha..." style="width:180px">
         <button class="btn2" style="font-size:11px;padding:6px 10px" onclick="togglePwdView()">👁</button>
       </div>
     </div>
-    <div class="srow" style="border-bottom:none;padding-bottom:0">
+    <div class="srow">
       <div>
-        <div class="slbl">Status</div>
-        <div class="sdesc">Exibe tela de senha ao abrir o Lumen</div>
+        <div class="slbl">Confirmar senha</div>
+        <div class="sdesc">Repita a senha para confirmar</div>
       </div>
-      <span id="pwdStatus" style="font-size:12px;font-weight:600;color:var(--text3)">Proteção desativada</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="password" class="sinp" id="accessPwdConfirm" placeholder="Repita a senha..." style="width:180px" oninput="checkPwdMatch()">
+        <button class="btn2" style="font-size:11px;padding:6px 10px" onclick="togglePwdConfirmView()">👁</button>
+      </div>
+    </div>
+    <div id="pwdMatchMsg" style="font-size:12px;margin:0 0 8px 0;min-height:16px;text-align:right;padding-right:4px"></div>
+    <div class="srow" style="border-bottom:none;padding-bottom:0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div>
+          <div class="slbl">Status</div>
+          <span id="pwdStatus" style="font-size:12px;font-weight:600;color:var(--text3)">Proteção desativada</span>
+        </div>
+      </div>
+      <button class="btn" id="btnSalvarSenha" onclick="salvarSenha()" style="font-size:12px;padding:8px 18px">Salvar Senha</button>
     </div>
   </div>
 </div>
@@ -986,6 +999,55 @@ function togglePwdView() {
   var inp = document.getElementById('accessPwd');
   if (!inp) return;
   inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function togglePwdConfirmView() {
+  var inp = document.getElementById('accessPwdConfirm');
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function checkPwdMatch() {
+  var p1  = document.getElementById('accessPwd').value;
+  var p2  = document.getElementById('accessPwdConfirm').value;
+  var msg = document.getElementById('pwdMatchMsg');
+  var btn = document.getElementById('btnSalvarSenha');
+  if (!p2) { msg.textContent = ''; btn.disabled = false; return; }
+  if (p1 === p2) {
+    msg.textContent = '✓ Senhas coincidem';
+    msg.style.color = 'var(--ok)';
+    btn.disabled = false;
+  } else {
+    msg.textContent = '✗ Senhas não coincidem';
+    msg.style.color = 'var(--red)';
+    btn.disabled = true;
+  }
+}
+
+function salvarSenha() {
+  var p1 = document.getElementById('accessPwd').value;
+  var p2 = document.getElementById('accessPwdConfirm').value;
+  var msg = document.getElementById('pwdMatchMsg');
+
+  // Validate match
+  if (p1 !== p2) {
+    msg.textContent = '✗ Senhas não coincidem';
+    msg.style.color = 'var(--red)';
+    return;
+  }
+
+  // Save via saveConf
+  saveConf();
+
+  // Clear confirmation field
+  document.getElementById('accessPwdConfirm').value = '';
+  msg.textContent = p1 ? '✓ Senha salva com sucesso!' : '✓ Proteção desativada.';
+  msg.style.color = 'var(--ok)';
+  setTimeout(function() { msg.textContent = ''; }, 3000);
+
+  toast(p1 ? '🔒 Senha de acesso salva!' : '🔓 Proteção desativada.');
+  updatePwdStatus(!!p1);
+  localStorage.removeItem(PWD_AUTH);
 }
 
 // ── MODEL HELPER ─────────────────────────────────────────────────
