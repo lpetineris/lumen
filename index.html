@@ -345,7 +345,7 @@ textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);
 <div id="toast"></div>
 
 <!-- TELA DE SENHA -->
-<div id="pwdScreen" style="display:none;position:fixed;inset:0;background:#f8fafc;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+<div id="pwdScreen" style="display:none;position:fixed;inset:0;background:#f8fafc;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:80px;padding-left:24px;padding-right:24px;padding-bottom:24px">
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(37,99,235,.12);text-align:center">
     <div style="width:52px;height:52px;background:#eff6ff;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:24px">🔒</div>
     <h2 style="font-size:20px;font-weight:700;color:#0f172a;margin-bottom:6px">Lumen Insights</h2>
@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <header>
-  <div class="logo">
+  <div class="logo" onclick="goTab('analisar')" style="cursor:pointer" title="Ir para Analisar">
     <div class="logo-icon">✦</div>
     Lumen <em>Insights</em>
   </div>
