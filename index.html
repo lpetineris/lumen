@@ -802,7 +802,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="srow">
       <div>
         <div class="slbl">Nova senha</div>
-        <div class="sdesc">Deixe em branco para desativar a proteção</div>
+        <div class="sdesc">Senha padrão: 010203 · Deixe em branco para desativar</div>
       </div>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="password" class="sinp" id="accessPwd" placeholder="Digite a senha..." style="width:180px">
@@ -937,9 +937,11 @@ function hashPwd(str) {
 
 function initPasswordProtection() {
   var conf = JSON.parse(localStorage.getItem('lc') || '{}');
-  var pwd  = conf.accessPwd || '';
+  // Use configured password, or default if none set yet
+  var DEFAULT_PWD = '010203';
+  var pwd = conf.accessPwd !== undefined ? conf.accessPwd : DEFAULT_PWD;
   if (!pwd) {
-    // No password set — show app normally
+    // Password explicitly cleared — protection disabled
     document.getElementById('pwdScreen').style.display = 'none';
     updatePwdStatus(false);
     return;
@@ -964,7 +966,8 @@ function checkPwd() {
   var inp  = document.getElementById('pwdInput');
   var err  = document.getElementById('pwdError');
   var conf = JSON.parse(localStorage.getItem('lc') || '{}');
-  var pwd  = conf.accessPwd || '';
+  var DEFAULT_PWD = '010203';
+  var pwd  = conf.accessPwd !== undefined ? conf.accessPwd : DEFAULT_PWD;
   if (!inp || !pwd) { document.getElementById('pwdScreen').style.display = 'none'; return; }
   if (inp.value === pwd) {
     // Correct — save auth token and hide screen
@@ -3158,10 +3161,13 @@ function loadConf() {
     if (c.lang) document.getElementById('lang').value = c.lang;
   } catch(e) {}
   syncPerfilBar();
-  // Restore password field
-  if (typeof c !== 'undefined' && c.accessPwd) {
-    var apwd = document.getElementById('accessPwd');
-    if (apwd) apwd.value = c.accessPwd;
+  // Restore password field — show placeholder if using default
+  var apwd = document.getElementById('accessPwd');
+  if (apwd) {
+    if (typeof c !== 'undefined' && c.accessPwd !== undefined) {
+      apwd.value = c.accessPwd;
+    }
+    // If no custom password set, show hint about default
   }
   setTimeout(atualizarModeloBadge, 100);
   // Make Config fields sync back to perfil bar in real time
