@@ -447,6 +447,17 @@ textarea:focus {
 }
 .sinp:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(249,115,22,.1); }
 
+/* ── HIST SCROLL ── */
+.hist-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--orange-m) var(--bg2);
+}
+.hist-scroll::-webkit-scrollbar { width: 5px; }
+.hist-scroll::-webkit-scrollbar-track { background: var(--bg2); border-radius: 3px; }
+.hist-scroll::-webkit-scrollbar-thumb { background: var(--orange-m); border-radius: 3px; }
+
 /* ── EMPTY ── */
 .empty { text-align: center; padding: 48px 20px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--s1); }
 .empty h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
@@ -555,7 +566,7 @@ textarea:focus {
   <nav>
     <button class="pill on" id="pill-conversar" onclick="goTab('conversar')">Consultor</button>
     <button class="pill" id="pill-analisar" onclick="goTab('analisar')">Analisar</button>
-    <button class="pill" id="pill-historico" onclick="goTab('historico')">Histórico</button>
+    <button class="pill" id="pill-historico" onclick="goTab('historico')">Históricos</button>
     <button class="pill" id="pill-config" onclick="goTab('config')">Perfil</button>
   </nav>
 </header>
@@ -574,7 +585,7 @@ textarea:focus {
   <p class="lbl">1 — Carregue seus dados</p>
 
   <input type="file" id="finput" multiple
-    accept=".txt,.pdf,.docx,.doc,.csv,.xlsx,.xls,.json"
+    accept=".txt,.pdf,.docx,.doc,.csv,.xlsx,.xls,.json,.odt,.tsv,.xml"
     style="display:none" onchange="onFiles(this.files)">
 
   <label for="finput" class="dropzone" id="dz">
@@ -586,7 +597,7 @@ textarea:focus {
     </div>
     <h3>Clique para selecionar arquivos</h3>
     <p>Ou arraste e solte aqui</p>
-    <span class="dz-fmts">TXT · PDF · DOCX · CSV · XLSX · JSON</span>
+    <span class="dz-fmts">TXT · PDF · DOCX · XLSX · CSV · ODT · JSON</span>
   </label>
 
   <div class="flist" id="flist">
@@ -678,15 +689,15 @@ textarea:focus {
   <div class="rcon" id="rcon">
     <div class="rhdr">
       <h2>Resultados</h2>
-      <div class="arow">
-        <button class="btn2" onclick="copiar()">📋 Copiar</button>
-        <button class="btn2" onclick="salvarHist()">💾 Salvar</button>
-        <button class="btn2" onclick="gerarResumoExecutivo()">⚡ Resumo</button>
-        <button class="btn" onclick="openModal('mA')">⬇ Exportar</button>
-      </div>
     </div>
     <div id="cards"></div>
     <div class="pag" id="pag"></div>
+    <div class="arow" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <button class="btn2" onclick="novaAnalise()">Nova Análise</button>
+      <button class="btn2" onclick="salvarHist()">💾 Salvar</button>
+      <button class="btn2" onclick="openModal('mA')">⬇ Exportar</button>
+      <button class="btn" onclick="gerarResumoExecutivo()">⚡ Resumo</button>
+    </div>
   </div>
 </div>
 
@@ -709,24 +720,7 @@ textarea:focus {
     </div>
   </div>
 
-  <!-- Histórico de conversas collapsible -->
-  <div id="histConvPanel" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:var(--s1)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <span style="font-size:13px;font-weight:700;color:var(--text)">Conversas salvas</span>
-      <div class="arow">
-        <label class="cblbl"><input type="checkbox" id="selAllConv" onchange="togSelAllConv(this)"> Todos</label>
-        <span id="selctConv" style="font-size:12px;color:var(--text3)"></span>
-        <button class="btnd" id="btnDelConv" onclick="delSelConv()" disabled style="font-size:11px;padding:4px 10px">🗑 Excluir</button>
-        <button class="btn2" onclick="limparTodasConversas()" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:var(--red)">🗑 Limpar tudo</button>
-      </div>
-    </div>
-    <div id="histConvList">
-      <div class="empty" style="padding:20px">
-        <h3 style="font-size:14px;margin-bottom:6px">Nenhuma conversa salva</h3>
-        <p>Clique em Salvar após uma conversa.</p>
-      </div>
-    </div>
-  </div>
+  <!-- Histórico de conversas movido para aba Históricos -->
 
   <!-- Chat area -->
   <div class="chat-box" style="border-radius:16px;border:1px solid var(--border);box-shadow:var(--s1)">
@@ -749,6 +743,7 @@ textarea:focus {
       <button class="sugg-btn" onclick="useSugg(this)">Quais são as principais oportunidades?</button>
       <button class="sugg-btn" onclick="useSugg(this)">O que meus clientes mais valorizam?</button>
       <button class="sugg-btn" onclick="useSugg(this)">O que devo priorizar agora?</button>
+      <button class="sugg-btn" onclick="useSugg(this)" style="border-color:var(--amber);color:var(--orange-d)">🔄 O que mudou desde a última análise?</button>
     </div>
 
     <!-- Input -->
@@ -762,27 +757,52 @@ textarea:focus {
   <div class="arow" style="margin-top:12px;justify-content:flex-end">
     <button class="btn2" onclick="novaConversa()" style="font-size:12px">Nova Conversa</button>
     <button class="btn2" onclick="salvarConversa()" style="font-size:12px">💾 Salvar</button>
-    <button class="btn2" onclick="toggleHistConv()" id="btnHistConv" style="font-size:12px">Conversas salvas</button>
-    <button class="btn" onclick="openModal('mC')">⬇ Exportar</button>
+    <button class="btn2" onclick="openModal('mC')" style="font-size:12px">⬇ Exportar</button>
+    <button class="btn" onclick="gerarResumoConversa()">⚡ Resumo</button>
   </div>
 </div>
 
-<!-- ── HISTÓRICO ── -->
+<!-- ── HISTÓRICOS ── -->
 <div class="tab" id="historico">
   <div class="section-hero">
-    <h1>Histórico de <span style="color:var(--orange)">análises</span></h1>
-    <p>Suas análises salvas aparecem aqui para consulta.</p>
+    <h1>Históricos de <span style="color:var(--orange)">conversas e análises</span></h1>
+    <p>Suas conversas e análises salvas aparecem aqui para consulta.</p>
   </div>
-  <div class="hist-tb" id="htb">
-    <div class="hist-tb-l">
-      <label class="cblbl"><input type="checkbox" id="selAll" onchange="togSelAll(this)"> Selecionar todos</label>
-      <span id="selct" style="font-size:12px;color:var(--text3)"></span>
+
+  <!-- CONVERSAS -->
+  <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:16px;box-shadow:var(--s1);min-height:180px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:15px;font-weight:700;color:var(--text)">Conversas salvas</div>
+      <div class="arow">
+        <label class="cblbl"><input type="checkbox" id="selAllConv" onchange="togSelAllConv(this)"> Todos</label>
+        <span id="selctConv" style="font-size:12px;color:var(--text3)"></span>
+        <button class="btnd" id="btnDelConv" onclick="confirmarDelSelConv()" disabled style="font-size:12px">🗑 Excluir selecionadas</button>
+
+      </div>
     </div>
-    <div class="arow">
-      <button class="btnd" id="btnDel" onclick="delSel()" disabled style="font-size:12px">🗑 Excluir selecionadas</button>
-    </div>
+    <div class="hist-scroll"><div id="histConvList">
+      <div class="empty" style="box-shadow:none">
+        <div style="margin:0 auto 14px;width:52px;height:52px;background:var(--orange-l);border-radius:13px;display:flex;align-items:center;justify-content:center">
+          <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><path d="M14 6v12m0 0l-4-4m4 4l4-4" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 22h16" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Nenhuma conversa salva</h3>
+        <p>Salve uma conversa na aba Consultor.</p>
+      </div>
+    </div></div>
   </div>
-  <div id="hlist"></div>
+
+  <!-- ANÁLISES -->
+  <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--s1);min-height:180px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:15px;font-weight:700;color:var(--text)">Análises salvas</div>
+      <div class="arow">
+        <label class="cblbl"><input type="checkbox" id="selAll" onchange="togSelAll(this)"> Todos</label>
+        <span id="selct" style="font-size:12px;color:var(--text3)"></span>
+        <button class="btnd" id="btnDel" onclick="confirmarDelSel()" disabled style="font-size:12px">🗑 Excluir selecionadas</button>
+      </div>
+    </div>
+    <div class="hist-scroll"><div id="hlist"></div></div>
+  </div>
 </div>
 
 <!-- ── CONFIG ── -->
@@ -793,30 +813,29 @@ textarea:focus {
   </div>
 
   <!-- API key oculta -->
-  <input type="hidden" id="ak" value="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">
 
   <div class="scard">
-    <h3>🏢 História da empresa</h3>
+    <h3>História da empresa</h3>
     <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Conte sobre sua empresa: segmento, público-alvo, produtos ou serviços e diferenciais.</p>
     <textarea id="empresaTxt" style="width:100%;min-height:110px;border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;font-family:'Poppins',sans-serif;font-size:13px;color:var(--text);background:var(--bg2);resize:vertical;outline:none;line-height:1.6" placeholder="Ex: Somos uma loja de moda feminina focada no público 25-45 anos, com presença online e física em São Paulo. Nosso diferencial é o atendimento personalizado e curadoria de peças exclusivas." onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--border)'"></textarea>
   </div>
 
   <div class="scard">
-    <h3>🎯 Missão</h3>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Por que sua empresa existe? O que ela faz e para quem?</p>
-    <textarea id="missaoTxt" style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;font-family:'Poppins',sans-serif;font-size:13px;color:var(--text);background:var(--bg2);resize:vertical;outline:none;line-height:1.6" placeholder="Ex: Oferecer moda feminina de qualidade com atendimento personalizado, tornando cada cliente única." onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    <h3>Nosso propósito</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Por que sua empresa existe? Qual problema resolve e para quem?</p>
+    <textarea id="missaoTxt" style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;font-family:'Poppins',sans-serif;font-size:13px;color:var(--text);background:var(--bg2);resize:vertical;outline:none;line-height:1.6" placeholder="Ex: Ajudamos mulheres a se vestirem bem sem gastar muito, tornando a moda acessível e personalizada." onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--border)'"></textarea>
   </div>
 
   <div class="scard">
-    <h3>🔭 Visão</h3>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Onde sua empresa quer chegar? Qual é o seu grande objetivo?</p>
-    <textarea id="visaoTxt" style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;font-family:'Poppins',sans-serif;font-size:13px;color:var(--text);background:var(--bg2);resize:vertical;outline:none;line-height:1.6" placeholder="Ex: Ser a marca de moda feminina mais querida de São Paulo até 2027." onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    <h3>Nosso cliente ideal</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Quem é seu cliente? Perfil, necessidades e o que ele mais valoriza.</p>
+    <textarea id="visaoTxt" style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;font-family:'Poppins',sans-serif;font-size:13px;color:var(--text);background:var(--bg2);resize:vertical;outline:none;line-height:1.6" placeholder="Ex: Mulheres de 25 a 45 anos, trabalhadoras, que buscam praticidade e estilo sem abrir mão do orçamento." onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--border)'"></textarea>
   </div>
 
   <div class="scard">
-    <h3>💎 Valores</h3>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Quais princípios guiam sua empresa no dia a dia?</p>
-    <textarea id="valoresTxt" style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;font-family:'Poppins',sans-serif;font-size:13px;color:var(--text);background:var(--bg2);resize:vertical;outline:none;line-height:1.6" placeholder="Ex: Autenticidade, respeito à cliente, qualidade, inovação e sustentabilidade." onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    <h3>O que nos diferencia</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px">O que faz sua empresa única? Por que o cliente escolhe você e não o concorrente?</p>
+    <textarea id="valoresTxt" style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;font-family:'Poppins',sans-serif;font-size:13px;color:var(--text);background:var(--bg2);resize:vertical;outline:none;line-height:1.6" placeholder="Ex: Atendimento personalizado, curadoria exclusiva de peças e entrega em 24h." onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--border)'"></textarea>
   </div>
 
   <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
@@ -832,7 +851,6 @@ textarea:focus {
 <div class="modal" id="mA">
   <div class="mbox">
     <h3>Exportar análise</h3><p>Escolha o formato</p>
-    <button class="mopt" onclick="exp('rtf','a')"><span class="mico">📝</span><div><div class="mtit">Word (.doc)</div><div class="mdesc">Editável no Word e Google Docs</div></div></button>
     <button class="mopt" onclick="exp('pdf','a')"><span class="mico">📄</span><div><div class="mtit">PDF</div><div class="mdesc">Pronto para compartilhar</div></div></button>
     <button class="mcan" onclick="closeModal('mA')">Cancelar</button>
   </div>
@@ -842,7 +860,6 @@ textarea:focus {
 <div class="modal" id="mExpConv">
   <div class="mbox">
     <h3>Exportar conversa</h3><p>Escolha o formato</p>
-    <button class="mopt" onclick="expConvDo('rtf')"><span class="mico">📝</span><div><div class="mtit">Word (.doc)</div><div class="mdesc">Editável no Word e Google Docs</div></div></button>
     <button class="mopt" onclick="expConvDo('pdf')"><span class="mico">📄</span><div><div class="mtit">PDF</div><div class="mdesc">Pronto para compartilhar</div></div></button>
     <button class="mcan" onclick="closeModal('mExpConv')">Cancelar</button>
   </div>
@@ -851,7 +868,6 @@ textarea:focus {
 <div class="modal" id="mExpItem">
   <div class="mbox">
     <h3>Exportar análise</h3><p>Escolha o formato</p>
-    <button class="mopt" onclick="expItemDo('rtf')"><span class="mico">📝</span><div><div class="mtit">Word (.doc)</div><div class="mdesc">Editável no Word e Google Docs</div></div></button>
     <button class="mopt" onclick="expItemDo('pdf')"><span class="mico">📄</span><div><div class="mtit">PDF</div><div class="mdesc">Pronto para compartilhar</div></div></button>
     <button class="mcan" onclick="closeModal('mExpItem')">Cancelar</button>
   </div>
@@ -860,7 +876,6 @@ textarea:focus {
 <div class="modal" id="mC">
   <div class="mbox">
     <h3>Exportar conversa</h3><p>Escolha o formato</p>
-    <button class="mopt" onclick="exp('rtf','c')"><span class="mico">📝</span><div><div class="mtit">Word (.doc)</div><div class="mdesc">Editável no Word e Google Docs</div></div></button>
     <button class="mopt" onclick="exp('pdf','c')"><span class="mico">📄</span><div><div class="mtit">PDF</div><div class="mdesc">Pronto para compartilhar</div></div></button>
     <button class="mcan" onclick="closeModal('mC')">Cancelar</button>
   </div>
@@ -903,7 +918,6 @@ textarea:focus {
       <div style="text-align:center;padding:20px;color:var(--text3)">Gerando resumo...</div>
     </div>
     <div class="arow" style="margin-top:14px">
-      <button class="btn" onclick="exp('rtf','resumo')">📝 Word</button>
       <button class="btn2" onclick="exp('pdf','resumo')">📄 PDF</button>
       <button class="btn2" onclick="copiarResumo()">📋 Copiar</button>
       <button class="mcan" style="flex:1" onclick="closeModal('mResumo')">Fechar</button>
@@ -912,7 +926,68 @@ textarea:focus {
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
+  if(typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
+<script>
+// ── API KEY ───────────────────────────────────────────────────
+// API key is securely stored on the server
+
+// ── SUPABASE CONFIG ───────────────────────────────────────────
+const SUPABASE_URL = 'https://tmuhfqnacajaxwlptrjg.supabase.co';
+const SUPABASE_KEY = 'SUPABASE_PUBLISHABLE_KEY_AQUI';
+let CURRENT_USER_ID = null;
+
+// User ID — uses Wix Members ID when available, fallback to localStorage
+function getUserId() {
+  if (CURRENT_USER_ID) return CURRENT_USER_ID;
+  let uid = localStorage.getItem('lm_uid');
+  if (!uid) {
+    uid = 'user_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    localStorage.setItem('lm_uid', uid);
+  }
+  CURRENT_USER_ID = uid;
+  return uid;
+}
+
+// Listen for userId from Wix Members via postMessage
+window.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'set-user-id' && event.data.userId) {
+    var newId = event.data.userId;
+    if (newId !== CURRENT_USER_ID) {
+      CURRENT_USER_ID = newId;
+      localStorage.setItem('lm_uid', newId);
+      // Reload data with real user ID
+      loadHist();
+      loadPerfilFromCloud();
+    }
+  }
+});
+
+// Signal to Wix that Lumen Mind is ready to receive userId
+if (window.parent && window.parent !== window) {
+  window.parent.postMessage('lumen-ready', '*');
+}
+
+// DB helper — calls Vercel proxy
+async function dbCall(action, table, data) {
+  try {
+    const res = await fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, table, data, user_id: getUserId() })
+    });
+    return await res.json();
+  } catch(e) {
+    console.error('DB error:', e);
+    return null;
+  }
+}
+
 // ── STATE ──────────────────────────────────────────────────────
 const S = { files:[], opts:[], lastText:null, chatCtx:'', chatHist:[] };
 const ANÁLISES = {
@@ -954,6 +1029,9 @@ function toast(msg, dur=2800) {
 
 // ── NAV ────────────────────────────────────────────────────────
 function goTab(id) {
+  if(id === 'historico') {
+    setTimeout(function(){ loadHist(); renderHistConv(); }, 100);
+  }
   ['analisar','conversar','historico','config'].forEach(t => {
     const tab=document.getElementById(t), pill=document.getElementById('pill-'+t);
     if(tab) tab.classList.remove('on');
@@ -971,7 +1049,14 @@ function onFiles(fileList) {
   if(!newFiles.length) return;
   for(const f of newFiles) {
     const ext = f.name.split('.').pop().toLowerCase();
-    S.files.push({ _name:f.name, _size:f.size, _file:f, _status: (ext==='xlsx'||ext==='xls') ? 'excel' : null });
+    S.files.push({ _name:f.name, _size:f.size, _file:f, _text:null, _status: (ext==='xlsx'||ext==='xls') ? 'excel' : null });
+    // Pre-read file to get accurate token estimate
+    (function(fileObj, fileRef) {
+      readFileContent(fileRef).then(function(text) {
+        fileObj._text = text;
+        estimarTokens();
+      }).catch(function(){});
+    })(S.files[S.files.length-1], f);
   }
   renderFiles(); updateSbar(); estimarTokens();
 }
@@ -980,7 +1065,7 @@ function renderFiles() {
   const el=document.getElementById('fitems'), wrap=document.getElementById('flist');
   if(!S.files.length) { wrap.style.display='none'; return; }
   wrap.style.display='block';
-  const ico = n => { const e=n.split('.').pop().toLowerCase(); if(['csv','xlsx','xls'].includes(e)) return '📊'; if(e==='pdf') return '📄'; if(['docx','doc'].includes(e)) return '📝'; return '📃'; };
+  const ico = n => { const e=n.split('.').pop().toLowerCase(); if(['csv','xlsx','xls','tsv'].includes(e)) return '📊'; if(e==='pdf') return '📄'; if(['docx','doc','odt','rtf'].includes(e)) return '📝'; if(e==='json'||e==='xml') return '🗂'; return '📃'; };
   el.innerHTML = S.files.map((f,i) => {
     const mb=((f._size||0)/1024/1024).toFixed(1);
     const kb=(f._size||0)/1024;
@@ -1006,22 +1091,53 @@ function updateSbar() {
 }
 
 function estimarTokens() {
-  const ptxt=document.getElementById('ptxt').value, ctx=document.getElementById('ctx').value;
-  let total=ptxt.length+ctx.length;
-  S.files.forEach(f => { total+=f._size||0; });
-  const inputTk=Math.round(total/4), outputTk=1000;
-  const custo=((inputTk*3+outputTk*15)/1000000);
-  const bar=document.getElementById('tokenBar');
-  const MAX_TK=875000;
-  if(total>100) {
-    bar.style.display='flex';
-    const over=inputTk>MAX_TK;
-    document.getElementById('tkTokens').textContent=inputTk.toLocaleString('pt-BR')+' tokens';
-    document.getElementById('tkTokens').style.color=over?'var(--red)':'var(--text)';
-    document.getElementById('tkCusto').textContent='~$'+custo.toFixed(4);
-    document.getElementById('tkCusto').style.color=over?'var(--red)':'var(--ok)';
-    document.getElementById('tkPags').textContent=over?'⚠ Muito grande':'≈'+Math.round(total/2000)+' pág.';
-  } else bar.style.display='none';
+  // Usa apenas texto extraído (f._text) se disponível, senão estima pelo tamanho
+  // Para arquivos binários (docx, pdf, xlsx) o tamanho em bytes não reflete o texto real
+  const ptxt = document.getElementById('ptxt').value;
+  const ctx  = document.getElementById('ctx').value;
+  let totalChars = ptxt.length + ctx.length;
+
+  S.files.forEach(function(f) {
+    if(f._text) {
+      // Texto já extraído — usa o tamanho real
+      totalChars += f._text.length;
+    } else {
+      // Arquivo ainda não lido — estima conservadoramente
+      // Arquivos binários têm ~10-20% de conteúdo texto
+      var ext = (f._name||'').split('.').pop().toLowerCase();
+      if(['xlsx','xls','docx','doc','pdf','odt','rtf'].includes(ext)) {
+        totalChars += Math.round((f._size||0) * 0.15); // 15% de texto útil
+      } else {
+        totalChars += f._size||0; // txt, csv — quase tudo é texto
+      }
+    }
+  });
+
+  // 1 token ≈ 4 caracteres em português
+  const inputTk  = Math.round(totalChars / 4);
+  const outputTk = 1000; // estimativa de saída
+
+  // Preços do Claude Haiku (modelo usado)
+  // Input: $0.25 / 1M tokens | Output: $1.25 / 1M tokens
+  const custo = ((inputTk * 0.25 + outputTk * 1.25) / 1000000);
+
+  // Páginas: ~2000 caracteres por página A4
+  const paginas = Math.max(1, Math.round(totalChars / 2000));
+
+  const bar = document.getElementById('tokenBar');
+  const MAX_TK = 875000;
+
+  if(totalChars > 100) {
+    bar.style.display = 'flex';
+    const over = inputTk > MAX_TK;
+    document.getElementById('tkTokens').textContent = inputTk.toLocaleString('pt-BR') + ' tokens';
+    document.getElementById('tkTokens').style.color = over ? 'var(--red)' : 'var(--text)';
+    document.getElementById('tkCusto').textContent = '~$' + custo.toFixed(4);
+    document.getElementById('tkCusto').style.color = over ? 'var(--red)' : 'var(--ok)';
+    document.getElementById('tkPags').textContent = over ? '⚠ Muito grande' : '≈' + paginas + ' pág.';
+  } else {
+    bar.style.display = 'none';
+  }
 }
 
 // ── CHIPS ──────────────────────────────────────────────────────
@@ -1033,8 +1149,6 @@ function togChip(el) {
 
 // ── ANÁLISE ────────────────────────────────────────────────────
 async function analisar() {
-  const ak=document.getElementById('ak').value.trim();
-  if(!ak) { document.getElementById('warn').style.display='inline'; return; }
   document.getElementById('warn').style.display='none';
   const ptxt=document.getElementById('ptxt').value.trim();
   if(!ptxt&&!S.files.length) { toast('⚠ Carregue arquivos ou cole texto.'); return; }
@@ -1081,9 +1195,9 @@ async function analisar() {
   },1500);
 
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('/api/chat',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ak,'anthropic-version':'2023-06-01','anthropic-beta':'prompt-caching-2024-07-31','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model: getModel(),
         max_tokens: 4000,
@@ -1182,21 +1296,40 @@ function copyFallback(text) {
 }
 
 // ── RESUMO EXECUTIVO ───────────────────────────────────────────
+async function gerarResumoConversa() {
+  if(!S.chatHist.length){ toast('⚠ Nenhuma conversa disponível.'); return; }
+  const ak = window.LUMI_API_KEY || '';
+  openModal('mResumo');
+  document.getElementById('resumoContent').innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3)"><div class="spin" style="margin:0 auto 10px"></div>Gerando resumo...</div>';
+  lastResumo = '';
+  const conv = S.chatHist.map(function(m){
+    return (m.role==='user'?'Cliente':'Lumi')+': '+m.content;
+  }).join('\n\n');
+  const prompt = 'Com base na conversa abaixo, gere um RESUMO EXECUTIVO completo com os principais pontos discutidos, insights identificados e ações recomendadas. Linguagem direta para empresários. Não interrompa o texto no meio — conclua todas as frases e seções.\n\nCONVERSA:\n'+conv.slice(0,8000);
+  try {
+    const res = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:getModel(),max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const data = await res.json();
+    if(!res.ok) throw new Error(data?.error?.message||'Erro');
+    lastResumo = data.content[0].text;
+    document.getElementById('resumoContent').innerHTML = lastResumo.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  } catch(e) { document.getElementById('resumoContent').innerHTML = '<p style="color:var(--red)">⚠ '+escHtml(traduzirErro(e,null))+'</p>'; }
+}
+
 async function gerarResumoExecutivo() {
   if(!S.lastText){toast('⚠ Nenhuma análise disponível.');return;}
-  const ak=document.getElementById('ak').value.trim();
-  if(!ak){toast('⚠ Configure sua API key em Config.');return;}
+
   openModal('mResumo');
   document.getElementById('resumoContent').innerHTML='<div style="text-align:center;padding:24px;color:var(--text3)"><div class="spin" style="margin:0 auto 10px"></div>Gerando resumo...</div>';
   lastResumo='';
   const prompt='Com base na análise abaixo, gere um RESUMO EXECUTIVO conciso de no máximo 1 página (400-500 palavras) com linguagem direta para empresários.\n\nO resumo deve ter:\n1. **Perfil dos clientes** (quem são)\n2. **Principais percepções** (o que pensam)\n3. **Oportunidades identificadas** (onde crescer)\n4. **Ações recomendadas** (o que fazer agora)\n\nEscreva em português do Brasil.\n\nANÁLISE:\n'+S.lastText.slice(0,6000);
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('/api/chat',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ak,'anthropic-version':'2023-06-01','anthropic-beta':'prompt-caching-2024-07-31','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model: getModel(),
-        max_tokens: 800,
+        max_tokens: 2000,
         system: [{
           type: 'text',
           text: 'Você é especialista em síntese executiva para empresários. '
@@ -1221,8 +1354,40 @@ async function gerarResumoExecutivo() {
 }
 function copiarResumo() {
   if(!lastResumo) return;
-  if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(lastResumo).then(()=>toast('✓ Resumo copiado!'));
-  else copyFallback(lastResumo);
+  // Method 1: modern clipboard API
+  if(navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(lastResumo)
+      .then(()=>toast('✓ Resumo copiado!'))
+      .catch(()=>copyFallbackResumo());
+  } else {
+    copyFallbackResumo();
+  }
+}
+
+function copyFallbackResumo() {
+  // Method 2: select text from the visible element
+  var el = document.getElementById('resumoContent');
+  if(!el) { copyFallback(lastResumo); return; }
+  try {
+    var range = document.createRange();
+    range.selectNodeContents(el);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.execCommand('copy');
+    sel.removeAllRanges();
+    toast('✓ Resumo copiado!');
+  } catch(e) {
+    // Method 3: textarea fallback
+    var ta = document.createElement('textarea');
+    ta.value = lastResumo;
+    ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try { document.execCommand('copy'); toast('✓ Resumo copiado!'); }
+    catch(e2) { toast('Use Ctrl+A e Ctrl+C para copiar.'); }
+    document.body.removeChild(ta);
+  }
 }
 
 // ── EXPORT ─────────────────────────────────────────────────────
@@ -1249,6 +1414,36 @@ function expItemDo(fmt) {
   window._expItemTemp = null;
 }
 
+function exportViaServer(title, text, date, format) {
+  // Build export URL with params — Wix will open it
+  var params = new URLSearchParams({
+    title: title||'',
+    date: date||'',
+    format: format||'word'
+  });
+  var exportUrl = '/export?' + params.toString();
+
+  // Send URL to Wix parent via postMessage — Wix Velo will open it
+  try {
+    window.parent.postMessage({
+      type: 'lumen-export',
+      url: 'https://lumenmind-five.vercel.app' + exportUrl
+    }, '*');
+    toast(format==='word' ? '✓ Abrindo Word...' : '✓ Abrindo PDF...');
+  } catch(e) {
+    // Fallback: try direct open
+    var w = window.open('https://lumenmind-five.vercel.app' + exportUrl, '_blank');
+    if(!w) toast('⚠ Permita popups no navegador para exportar.');
+  }
+
+  // Also store text for the export page to retrieve
+  try {
+    sessionStorage.setItem('lumen_export_content', JSON.stringify({
+      title: title, content: text, date: date, format: format
+    }));
+  } catch(e) {}
+}
+
 function saveRTF(title,text,date) {
   const enc=s=>s.replace(/\\/g,'\\\\').replace(/[{}]/g,c=>'\\'+c).replace(/[^\x00-\x7F]/g,c=>`\\u${c.charCodeAt(0)}?`);
   let r='{\\rtf1\\ansi\\ansicpg1252\\deff0\n{\\fonttbl{\\f0\\fswiss\\fcharset0 Arial;}}\n{\\colortbl;\\red249\\green115\\blue22;}\n\\f0\\fs24\\sa180\\sl360\\slmult1\n';
@@ -1260,8 +1455,22 @@ function saveRTF(title,text,date) {
     else r+=c+'\\par\n';
   });
   r+='}';
-  dl(new Blob([r],{type:'application/rtf'}),'lumen-mind-'+Date.now()+'.rtf');
-  toast('✓ Arquivo Word gerado!');
+  var fname=(title.replace(/[^a-zA-Z0-9À-ÿ\s]/g,'').replace(/\s+/g,'_').slice(0,40)||'lumen-mind')+'.rtf';
+  var blob = new Blob([r],{type:'application/rtf'});
+  // Try data URI for better iframe compatibility
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var a = document.createElement('a');
+    a.href = e.target.result;
+    a.download = fname;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+  reader.onerror = function() { dl(blob, fname); };
+  reader.readAsDataURL(blob);
+  toast('✓ Salvo em Downloads!');
 }
 
 function savePDF(title,text,date) {
@@ -1275,27 +1484,54 @@ function savePDF(title,text,date) {
     +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:13px;color:#1C1917;padding:44px 50px;line-height:1.7}'
     +'.h{border-bottom:3px solid #F97316;padding-bottom:13px;margin-bottom:24px}.h h1{font-size:19px;font-weight:700;color:#F97316}.h p{font-size:12px;color:#78716C;margin-top:3px}'
     +'h2{font-size:14px;font-weight:700;color:#C2570A;margin:20px 0 7px;border-left:4px solid #F97316;padding-left:9px}'
-    +'p{margin-bottom:7px;color:#44403C}strong{color:#1C1917}@media print{body{padding:28px 36px}}</style>'
-    +'</head><body><div class="h"><h1>'+escHtml(title)+'</h1><p>Gerado em '+date+'</p></div>'+lines+'</body></html>';
+    +'p{margin-bottom:7px;color:#44403C}strong{color:#1C1917}'
+    +'@media print{body{padding:28px 36px}button{display:none!important}}'
+    +'</style></head><body>'
+    +'<div class="h"><h1>'+escHtml(title)+'</h1><p>Gerado em '+date+'</p></div>'
+    +lines
+    +'<scr'+'ipt>window.onload=function(){window.print();}</scr'+'ipt>'
+    +'</body></html>';
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download=(title.replace(/[^a-zA-Z0-9À-ÿ\s]/g,'').replace(/\s+/g,'_').slice(0,40)||'lumen-mind')+'_'+Date.now()+'.html';
-  a.target='_blank'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  toast('✓ Arquivo gerado! Abra e use Ctrl+P para PDF.');
+  const w=window.open(url,'_blank');
+  if(!w) {
+    // Blocked by iframe — use download fallback
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=(title.replace(/[^a-zA-Z0-9À-ÿ\s]/g,'').replace(/\s+/g,'_').slice(0,40)||'lumen-mind')+'.html';
+    a.style.display='none';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast('✓ Salvo em Downloads! Abra e use Ctrl+P para salvar como PDF.');
+  } else {
+    toast('✓ Abrindo — use Ctrl+P → Salvar como PDF.');
+  }
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
 }
 
 function dl(blob,name) {
-  const url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  const url = URL.createObjectURL(blob);
+  try {
+    // Method 1: standard anchor download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 3000);
+  } catch(e) {
+    // Method 2: open in new tab as fallback
+    window.open(url, '_blank');
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  }
 }
 
 // ── CHAT ───────────────────────────────────────────────────────
 async function chat() {
   const inp=document.getElementById('cinp'),msg=inp.value.trim();
   if(!msg) return;
-  const ak=document.getElementById('ak').value.trim();
-  if(!ak){toast('⚠ Configure sua API key em Config.');return;}
+
   bubble(msg,'u'); inp.value='';
   S.chatHist.push({role:'user',content:msg});
   const typing=bubble('...','a');
@@ -1333,9 +1569,9 @@ async function chat() {
   }
 
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('/api/chat',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ak,'anthropic-version':'2023-06-01','anthropic-beta':'prompt-caching-2024-07-31','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:getModel(),max_tokens:800,system:systemBlocks,messages:S.chatHist.slice(-6)})
     });
     const data=await res.json();
@@ -1381,38 +1617,100 @@ function bubble(text,cls) {
 }
 
 // ── HISTORY ────────────────────────────────────────────────────
-function salvarHist() {
+async function salvarHist() {
   if(!S.lastText){toast('Nenhuma análise disponível.');return;}
-  const item={id:Date.now(),date:new Date().toLocaleDateString('pt-BR'),title:'Análise — '+new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}),text:S.lastText,opts:S.opts.slice()};
-  const hist=loadHistData();hist.unshift(item);
-  localStorage.setItem('lm_hist',JSON.stringify(hist));
-  renderHist(); toast('✓ Análise salva!');
+  var title = 'Análise — '+new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+  var date  = new Date().toLocaleDateString('pt-BR');
+  var result = await dbCall('insert','analises',{
+    titulo: title,
+    conteudo: S.lastText,
+    opcoes: S.opts
+  });
+  if(result && Array.isArray(result) && result.length > 0) {
+    toast('✓ Análise salva na nuvem!');
+    window._histCache = null;
+    await loadHist();
+  } else {
+    // Fallback localStorage
+    var item={id:Date.now(),date:date,title:title,text:S.lastText,opts:S.opts.slice()};
+    var hist=JSON.parse(localStorage.getItem('lm_hist')||'[]');
+    hist.unshift(item);
+    localStorage.setItem('lm_hist',JSON.stringify(hist));
+    window._histCache = null;
+    renderHist();
+    toast('✓ Análise salva localmente!');
+  }
 }
-function loadHistData(){try{return JSON.parse(localStorage.getItem('lm_hist')||'[]');}catch(e){return[];}}
-function loadHist(){ renderHist(); }
+function loadHistData(){
+  if(window._histCache) return window._histCache;
+  try{return JSON.parse(localStorage.getItem('lm_hist')||'[]');}catch(e){return[];}
+}
+async function loadHist() {
+  // Load from localStorage first for immediate display
+  window._histCache = null;
+  renderHist();
+  // Then load from Supabase
+  var data = await dbCall('select','analises',{});
+  if(data && Array.isArray(data) && !data.error) {
+    var cloudItems = data.map(function(d){
+      return {
+        id: 'cloud_'+d.id,
+        _cloudId: d.id,
+        date: new Date(d.criado_em).toLocaleDateString('pt-BR'),
+        title: d.titulo,
+        text: d.conteudo,
+        opts: d.opcoes||[],
+        tags: d.tags||[],
+        _cloud: true
+      };
+    });
+    // Merge with local items not yet in cloud
+    var local = JSON.parse(localStorage.getItem('lm_hist')||'[]');
+    var localOnly = local.filter(function(l){ return !l._cloud; });
+    window._histCache = cloudItems.concat(localOnly);
+  } else {
+    // Fallback to localStorage only
+    window._histCache = JSON.parse(localStorage.getItem('lm_hist')||'[]');
+  }
+  renderHist();
+}
 function renderHist() {
-  const list=document.getElementById('hlist'), tb=document.getElementById('htb');
+  const list=document.getElementById('hlist');
   const hist=loadHistData();
   if(!hist.length){
-    list.innerHTML='<div class="empty"><div style="margin:0 auto 14px;width:52px;height:52px;background:var(--orange-l);border-radius:13px;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 28 28" fill="none"><path d="M14 6v12m0 0l-4-4m4 4l4-4" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 22h16" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/></svg></div><h3>Nenhuma análise salva</h3><p>Faça uma análise e clique em Salvar.</p><p style="font-size:12px;color:var(--text3);margin-top:6px">Suas análises ficam guardadas aqui para consulta futura</p></div>';
-    tb.style.display='none'; return;
+    list.innerHTML='<div class="empty" style="box-shadow:none"><div style="margin:0 auto 14px;width:52px;height:52px;background:var(--orange-l);border-radius:13px;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 28 28" fill="none"><path d="M14 6v12m0 0l-4-4m4 4l4-4" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 22h16" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/></svg></div><h3>Nenhuma análise salva</h3><p>Faça uma análise e clique em Salvar.</p></div>';
+    return;
   }
-  tb.style.display='flex';
   list.innerHTML = hist.map(function(h) {
+    var sid = String(h.id);
     var tags = (h.tags||[]).map(function(t){ return '<span class="htag">'+escHtml(t)+'</span>'; }).join('');
-    return '<div class="hitem" id="hi'+h.id+'">'
-      + '<input type="checkbox" value="'+h.id+'" onchange="onCb()">'
-      + '<div class="hitem-info" onclick="loadItem('+h.id+')">'
+    return '<div class="hitem" id="hi'+sid+'">'
+      + '<input type="checkbox" value="'+sid+'" onchange="onCb()">'
+      + '<div class="hitem-info" style="cursor:pointer">'
       + '<h4 style="margin-bottom:3px">'+escHtml(h.title)+'</h4>'
       + '<p>'+h.date+(tags?'&nbsp;&nbsp;'+tags:'')+'</p>'
       + '</div>'
       + '<div style="display:flex;gap:5px;flex-shrink:0">'
-      + '<button class="btn2" style="font-size:11px;padding:4px 9px" onclick="expItem('+h.id+')" title="Exportar">⬇</button>'
-      + '<button class="btn2" style="font-size:11px;padding:4px 9px" onclick="editItem('+h.id+')" title="Editar">✏ Editar</button>'
-      + '<button class="btnd" style="font-size:11px;padding:4px 9px" onclick="delItem('+h.id+')" title="Excluir">🗑</button>'
+      + '<button class="btn2" style="font-size:11px;padding:4px 9px" data-action="exp" data-id="'+sid+'">Exportar</button>'
+      + '<button class="btn2" style="font-size:11px;padding:4px 9px" data-action="edit" data-id="'+sid+'">Renomear</button>'
+      + '<button class="btnd" style="font-size:11px;padding:4px 9px" data-action="del" data-id="'+sid+'" title="Excluir">🗑</button>'
       + '</div>'
       + '</div>';
   }).join('');
+  // Attach event listeners
+  document.querySelectorAll('#hlist .hitem').forEach(function(row) {
+    var sid = row.id.replace('hi','');
+    row.querySelector('.hitem-info').addEventListener('click', function(){ loadItem(sid); });
+    row.querySelectorAll('button[data-action]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var a = btn.dataset.action, id = btn.dataset.id;
+        if(a==='exp') expItem(id);
+        else if(a==='edit') editItem(id);
+        else if(a==='del') confirmarDelItem(id);
+      });
+    });
+  });
   onCb();
 }
 function onCb(){
@@ -1424,17 +1722,37 @@ function onCb(){
 }
 function togSelAll(cb){document.querySelectorAll('#hlist input[type=checkbox]').forEach(c=>c.checked=cb.checked);onCb();}
 function editItem(id) {
-  const hist = loadHistData();
-  const item = hist.find(function(h){ return h.id===id; });
+  var sid = String(id);
+  var hist = loadHistData();
+  var item = hist.find(function(h){ return String(h.id)===sid; });
   if(!item) return;
-  document.getElementById('editId').value = id;
-  document.getElementById('editNome').value = item.title;
-  // Reset tags
-  document.querySelectorAll('.tag-btn').forEach(function(b){ b.classList.remove('on'); });
-  (item.tags||[]).forEach(function(t){
-    document.querySelectorAll('.tag-btn').forEach(function(b){ if(b.dataset.tag===t) b.classList.add('on'); });
-  });
-  openModal('mEdit');
+  var row = document.getElementById('hi'+sid);
+  if(!row) return;
+  var h4 = row.querySelector('h4');
+  var inp = document.createElement('input');
+  inp.type='text'; inp.value=item.title;
+  inp.style.cssText='font-size:13px;font-weight:600;border:1.5px solid var(--orange);border-radius:5px;padding:3px 8px;width:220px;font-family:Poppins,sans-serif;outline:none';
+  h4.innerHTML=''; h4.appendChild(inp);
+  inp.focus(); inp.select();
+  var saved=false;
+  function save() {
+    if(saved) return; saved=true;
+    var v=inp.value.trim();
+    if(v && v!==item.title){
+      item.title=v;
+      if(item._cloud && item._cloudId) {
+        dbCall('update','analises',{id:item._cloudId, titulo:v});
+      } else {
+        var local=JSON.parse(localStorage.getItem('lm_hist')||'[]');
+        var li=local.find(function(h){return h.id===item.id;});
+        if(li){li.title=v;localStorage.setItem('lm_hist',JSON.stringify(local));}
+      }
+      toast('✓ Análise renomeada!');
+    }
+    renderHist();
+  }
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();save();}if(e.key==='Escape'){saved=true;renderHist();}});
+  inp.addEventListener('blur',save);
 }
 
 function salvarEdit() {
@@ -1459,15 +1777,92 @@ function expItem(id) {
   openModal('mExpItem');
 }
 
-function delItem(id){const hist=loadHistData().filter(h=>h.id!==id);localStorage.setItem('lm_hist',JSON.stringify(hist));renderHist();toast('✓ Análise excluída.');}
-function delSel(){
-  const ids=Array.from(document.querySelectorAll('#hlist input[type=checkbox]:checked')).map(c=>Number(c.value));
-  if(!ids.length) return;
-  const hist=loadHistData().filter(h=>!ids.includes(h.id));
-  localStorage.setItem('lm_hist',JSON.stringify(hist));renderHist();toast('✓ '+ids.length+' excluída(s).');
+function confirmarDelItem(id) {
+  if(confirm('Excluir esta análise? Esta ação não pode ser desfeita.')) {
+    delItem(String(id));
+  }
+}
+
+function confirmarDelConv(sid) {
+  if(confirm('Excluir esta conversa? Esta ação não pode ser desfeita.')) {
+    delItemConv(sid);
+  }
+}
+
+function confirmarDelSel() {
+  var n = document.querySelectorAll('#hlist input[type=checkbox]:checked').length;
+  if(n && confirm('Excluir '+n+' análise(s) selecionada(s)? Esta ação não pode ser desfeita.')) {
+    delSel();
+  }
+}
+
+function confirmarDelSelConv() {
+  var n = document.querySelectorAll('#histConvList input[type=checkbox]:checked').length;
+  if(n && confirm('Excluir '+n+' conversa(s) selecionada(s)? Esta ação não pode ser desfeita.')) {
+    delSelConv();
+  }
+}
+
+async function delItem(id) {
+  var sid = String(id);
+  // Remove from cache immediately for instant UI update
+  if(window._histCache) {
+    window._histCache = window._histCache.filter(function(h){ return String(h.id)!==sid; });
+  }
+  renderHist();
+  // Find item to check if cloud
+  var item = null;
+  try { item = JSON.parse(localStorage.getItem('lm_hist')||'[]').find(function(h){ return String(h.id)===sid; }); } catch(e){}
+  // Also check if it was a cloud item (id starts with 'cloud_')
+  if(sid.startsWith('cloud_')) {
+    var cloudId = parseInt(sid.replace('cloud_',''));
+    if(cloudId) await dbCall('delete','analises',{id: cloudId});
+  } else if(item && item._cloud && item._cloudId) {
+    await dbCall('delete','analises',{id: item._cloudId});
+  }
+  // Remove from localStorage
+  var local = JSON.parse(localStorage.getItem('lm_hist')||'[]');
+  localStorage.setItem('lm_hist', JSON.stringify(local.filter(function(h){ return String(h.id)!==sid && !h._cloud; })));
+  toast('✓ Análise excluída.');
+  // Reset checkboxes
+  var selAll = document.getElementById('selAll');
+  if(selAll) selAll.checked = false;
+  var selct = document.getElementById('selct');
+  if(selct) selct.textContent = '';
+  var btnDel = document.getElementById('btnDel');
+  if(btnDel) btnDel.disabled = true;
+}
+async function delSel(){
+  var sids = Array.from(document.querySelectorAll('#hlist input[type=checkbox]:checked')).map(function(c){ return String(c.value); });
+  if(!sids.length) return;
+  // Remove from cache immediately
+  if(window._histCache) {
+    window._histCache = window._histCache.filter(function(h){ return !sids.includes(String(h.id)); });
+  }
+  renderHist();
+  // Delete cloud items
+  for(var i=0; i<sids.length; i++) {
+    var sid = sids[i];
+    if(sid.startsWith('cloud_')) {
+      var cloudId = parseInt(sid.replace('cloud_',''));
+      if(cloudId) await dbCall('delete','analises',{id: cloudId});
+    }
+  }
+  // Remove from localStorage
+  var local = JSON.parse(localStorage.getItem('lm_hist')||'[]');
+  localStorage.setItem('lm_hist', JSON.stringify(local.filter(function(h){ return !sids.includes(String(h.id)) && !h._cloud; })));
+  toast('✓ '+sids.length+' excluída(s).');
+  // Reset checkboxes
+  var selAll = document.getElementById('selAll');
+  if(selAll) selAll.checked = false;
+  var selct = document.getElementById('selct');
+  if(selct) selct.textContent = '';
+  var btnDel = document.getElementById('btnDel');
+  if(btnDel) btnDel.disabled = true;
 }
 function loadItem(id){
-  const item=loadHistData().find(h=>h.id===id);
+  var sid = String(id);
+  const item=loadHistData().find(function(h){ return String(h.id)===sid; });
   if(!item) return;
   S.lastText=item.text; S.chatCtx=item.text;
   allSecs=parseSections(item.text); curPage=1;
@@ -1503,9 +1898,14 @@ function salvarConversa() {
   var hist = loadConvHistData();
   hist.unshift(item);
   localStorage.setItem('lm_conv', JSON.stringify(hist));
+  // Save to Supabase
+  dbCall('insert','conversas',{
+    titulo: item.title,
+    mensagens: item.msgs
+  });
   renderHistConv();
   if(document.getElementById('histConvPanel').style.display === 'none') toggleHistConv();
-  toast('✓ Conversa salva!');
+  toast('✓ Conversa salva na nuvem!');
 }
 
 function loadConvHistData() { try { return JSON.parse(localStorage.getItem('lm_conv')||'[]'); } catch(e) { return []; } }
@@ -1525,7 +1925,7 @@ function renderHistConv() {
   var list = document.getElementById('histConvList');
   var data = loadConvHistData();
   if(!data.length) {
-    list.innerHTML = '<div class="empty" style="padding:20px"><h3 style="font-size:14px;margin-bottom:6px">Nenhuma conversa salva</h3><p>Clique em Salvar após um chat.</p></div>';
+    list.innerHTML = '<div class="empty" style="box-shadow:none"><div style="margin:0 auto 14px;width:52px;height:52px;background:var(--orange-l);border-radius:13px;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 28 28" fill="none"><path d="M14 6v12m0 0l-4-4m4 4l4-4" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 22h16" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/></svg></div><h3>Nenhuma conversa salva</h3><p>Salve uma conversa na aba Consultor.</p></div>';
     return;
   }
   list.innerHTML = data.map(function(item) {
@@ -1560,7 +1960,7 @@ function renderHistConv() {
       btn.addEventListener('click', function(){
         if(action==='exp') expConv(sid);
         else if(action==='ren') renomearConv(sid);
-        else if(action==='del') delItemConv(sid);
+        else if(action==='del') confirmarDelConv(sid);
       });
     });
   });
@@ -1589,6 +1989,13 @@ function delItemConv(sid) {
   localStorage.setItem('lm_conv', JSON.stringify(hist));
   renderHistConv();
   toast('✓ Conversa excluída.');
+  // Reset checkboxes
+  var selAllConv = document.getElementById('selAllConv');
+  if(selAllConv) selAllConv.checked = false;
+  var selctConv = document.getElementById('selctConv');
+  if(selctConv) selctConv.textContent = '';
+  var btnDelConv = document.getElementById('btnDelConv');
+  if(btnDelConv) btnDelConv.disabled = true;
 }
 
 function delSelConv() {
@@ -1598,6 +2005,13 @@ function delSelConv() {
   localStorage.setItem('lm_conv', JSON.stringify(hist));
   renderHistConv();
   toast('✓ '+ids.length+' conversa(s) excluída(s).');
+  // Reset checkboxes
+  var selAllConv = document.getElementById('selAllConv');
+  if(selAllConv) selAllConv.checked = false;
+  var selctConv = document.getElementById('selctConv');
+  if(selctConv) selctConv.textContent = '';
+  var btnDelConv = document.getElementById('btnDelConv');
+  if(btnDelConv) btnDelConv.disabled = true;
 }
 
 function limparTodasConversas() {
@@ -1645,8 +2059,8 @@ function carregarConversa(sid) {
     msgsEl.appendChild(b);
   });
   msgsEl.scrollTop=msgsEl.scrollHeight;
-  if(document.getElementById('histConvPanel').style.display!=='none') toggleHistConv();
   toast('✓ Conversa carregada!');
+  goTab('conversar');
 }
 
 function expConv(sid) {
@@ -1669,6 +2083,36 @@ function expConvDo(fmt) {
   window._expConvTemp = null;
 }
 
+function traduzirErro(err, data) {
+  // Timeout
+  if(err && err.name === 'AbortError') return 'A análise demorou mais do que o esperado. Tente reduzir a quantidade de dados ou selecionar menos tipos de análise.';
+  if(data && data.error === 'timeout') return data.message || 'A análise demorou demais. Tente com menos dados.';
+  // HTTP errors
+  if(data && data.error && data.error.type) {
+    var t = data.error.type;
+    if(t === 'overloaded_error') return 'O serviço está sobrecarregado no momento. Aguarde alguns minutos e tente novamente.';
+    if(t === 'rate_limit_error') return 'Limite de uso atingido. Aguarde alguns minutos e tente novamente.';
+    if(t === 'authentication_error') return 'Erro de autenticação. Entre em contato com o suporte.';
+    if(t === 'invalid_request_error') return 'O conteúdo enviado é muito grande. Tente reduzir a quantidade de dados.';
+    if(data.error.message) return data.error.message;
+  }
+  // Network errors
+  if(err && err.message) {
+    if(err.message.includes('fetch')) return 'Sem conexão com a internet. Verifique sua conexão e tente novamente.';
+    if(err.message.includes('timeout') || err.message.includes('504')) return 'A análise demorou mais do que o esperado. Tente com menos dados.';
+    if(err.message.includes('500')) return 'Erro interno do servidor. Tente novamente em alguns instantes.';
+    if(err.message.includes('JSON')) return 'Erro ao processar a resposta. Tente novamente.';
+  }
+  return 'Não foi possível completar a análise. Tente novamente ou entre em contato com o suporte.';
+}
+
+function novaAnalise(){
+  limparTudo();
+  document.getElementById('rcon').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast('✓ Pronto para nova análise!');
+}
+
 function limparTudo(){
   S.files=[]; renderFiles();
   const inp=document.getElementById('finput'); if(inp) inp.value='';
@@ -1685,25 +2129,135 @@ function limparTudo(){
 // ── FILE READER ────────────────────────────────────────────────
 function readFileContent(file){
   return new Promise((resolve,reject)=>{
-    const name=file.name.toLowerCase(),ext=name.split('.').pop();
+    const name=file.name.toLowerCase(), ext=name.split('.').pop();
+
+    // ── EXCEL ──
     if(ext==='xlsx'||ext==='xls'){
       const reader=new FileReader();
       reader.onload=e=>{
         try{
           const data=new Uint8Array(e.target.result),wb=XLSX.read(data,{type:'array'});
           let result='';
-          wb.SheetNames.forEach(sn=>{const ws=wb.Sheets[sn],csv=XLSX.utils.sheet_to_csv(ws);const rows=csv.split('\n').filter(r=>r.trim());result+='\n--- Planilha: '+sn+' ---\n';rows.forEach(row=>result+=row.split(',').join(' | ')+'\n');});
+          wb.SheetNames.forEach(sn=>{
+            const ws=wb.Sheets[sn],csv=XLSX.utils.sheet_to_csv(ws);
+            const rows=csv.split('\n').filter(r=>r.trim());
+            result+='\n--- Planilha: '+sn+' ---\n';
+            rows.forEach(row=>result+=row.split(',').join(' | ')+'\n');
+          });
           resolve(result.trim());
         }catch(e){reject(new Error('Erro ao ler Excel: '+e.message));}
       };
-      reader.onerror=()=>reject(new Error('Falha ao carregar arquivo'));
-      reader.readAsArrayBuffer(file);return;
+      reader.onerror=()=>reject(new Error('Falha ao ler Excel'));
+      reader.readAsArrayBuffer(file); return;
     }
-    if(ext==='csv'){
+
+    // ── CSV / TSV ──
+    if(ext==='csv'||ext==='tsv'){
       const reader=new FileReader();
-      reader.onload=e=>{try{resolve(e.target.result.split('\n').map(l=>l.split(',').join(' | ')).join('\n'));}catch(e){reject(e);}};
-      reader.onerror=reject; reader.readAsText(file,'UTF-8');return;
+      const sep=ext==='tsv'?'\t':',';
+      reader.onload=e=>{
+        try{
+          const rows=e.target.result.split('\n').filter(r=>r.trim());
+          resolve(rows.map(l=>l.split(sep).join(' | ')).join('\n'));
+        }catch(e){reject(e);}
+      };
+      reader.onerror=reject; reader.readAsText(file,'UTF-8'); return;
     }
+
+    // ── DOCX / DOC ──
+    if(ext==='docx'||ext==='doc'){
+      if(typeof mammoth==='undefined'){
+        reject(new Error('Biblioteca DOCX não carregada. Tente novamente.')); return;
+      }
+      const reader=new FileReader();
+      reader.onload=e=>{
+        mammoth.extractRawText({arrayBuffer:e.target.result})
+          .then(r=>resolve(r.value.trim()))
+          .catch(e=>reject(new Error('Erro ao ler DOCX: '+e.message)));
+      };
+      reader.onerror=()=>reject(new Error('Falha ao ler DOCX'));
+      reader.readAsArrayBuffer(file); return;
+    }
+
+    // ── PDF ──
+    if(ext==='pdf'){
+      if(typeof pdfjsLib==='undefined'){
+        reject(new Error('Biblioteca PDF não carregada. Tente novamente.')); return;
+      }
+      const reader=new FileReader();
+      reader.onload=async e=>{
+        try{
+          const pdf=await pdfjsLib.getDocument({data:new Uint8Array(e.target.result)}).promise;
+          let text='';
+          for(let i=1;i<=pdf.numPages;i++){
+            const page=await pdf.getPage(i);
+            const content=await page.getTextContent();
+            text+=content.items.map(s=>s.str).join(' ')+'\n';
+          }
+          resolve(text.trim());
+        }catch(e){reject(new Error('Erro ao ler PDF: '+e.message));}
+      };
+      reader.onerror=()=>reject(new Error('Falha ao ler PDF'));
+      reader.readAsArrayBuffer(file); return;
+    }
+
+    // ── ODT ──
+    if(ext==='odt'){
+      if(typeof mammoth==='undefined'){
+        reject(new Error('Biblioteca ODT não carregada.')); return;
+      }
+      const reader=new FileReader();
+      reader.onload=e=>{
+        mammoth.extractRawText({arrayBuffer:e.target.result})
+          .then(r=>resolve(r.value.trim()))
+          .catch(e=>reject(new Error('Erro ao ler ODT: '+e.message)));
+      };
+      reader.onerror=reject;
+      reader.readAsArrayBuffer(file); return;
+    }
+
+    // ── JSON ──
+    if(ext==='json'){
+      const reader=new FileReader();
+      reader.onload=e=>{
+        try{
+          const obj=JSON.parse(e.target.result);
+          resolve(JSON.stringify(obj,null,2));
+        }catch(e){reject(new Error('JSON inválido: '+e.message));}
+      };
+      reader.onerror=reject; reader.readAsText(file,'UTF-8'); return;
+    }
+
+    // ── XML ──
+    if(ext==='xml'){
+      const reader=new FileReader();
+      reader.onload=e=>{
+        try{
+          // Extract text content from XML tags
+          const text=e.target.result.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+          resolve(text);
+        }catch(e){reject(e);}
+      };
+      reader.onerror=reject; reader.readAsText(file,'UTF-8'); return;
+    }
+
+    // ── RTF ──
+    if(ext==='rtf'){
+      const reader=new FileReader();
+      reader.onload=e=>{
+        try{
+          // Strip RTF control codes
+          let text=e.target.result;
+          text=text.replace(/\\[a-z]+\d*\s?/g,' ');
+          text=text.replace(/[{}]/g,'');
+          text=text.replace(/\s+/g,' ').trim();
+          resolve(text);
+        }catch(e){reject(e);}
+      };
+      reader.onerror=reject; reader.readAsText(file,'UTF-8'); return;
+    }
+
+    // ── TXT e outros ──
     const reader=new FileReader();
     reader.onload=e=>resolve(e.target.result);
     reader.onerror=reject; reader.readAsText(file,'UTF-8');
@@ -1719,7 +2273,7 @@ function getLangInstruction(){
   return map[lang]||map['pt'];
 }
 
-function salvarPerfil(){
+async function salvarPerfil(){
   var empresa = document.getElementById('empresaTxt').value.trim();
   var missao  = document.getElementById('missaoTxt').value.trim();
   var visao   = document.getElementById('visaoTxt').value.trim();
@@ -1727,9 +2281,9 @@ function salvarPerfil(){
   // Sync hidden ctx
   var ctx = '';
   if(empresa) ctx += 'EMPRESA: '+empresa+'\n\n';
-  if(missao)  ctx += 'MISSÃO: '+missao+'\n\n';
-  if(visao)   ctx += 'VISÃO: '+visao+'\n\n';
-  if(valores) ctx += 'VALORES: '+valores;
+  if(missao)  ctx += 'PROPÓSITO: '+missao+'\n\n';
+  if(visao)   ctx += 'CLIENTE IDEAL: '+visao+'\n\n';
+  if(valores) ctx += 'DIFERENCIAIS: '+valores;
   document.getElementById('ctx').value = ctx.trim();
   var conf = JSON.parse(localStorage.getItem('lm_conf')||'{}');
   conf.empresa = empresa; conf.missao = missao; conf.visao = visao; conf.valores = valores;
@@ -1737,6 +2291,10 @@ function salvarPerfil(){
   var badge = document.getElementById('perfilSaved');
   if(badge){ badge.style.display='inline'; setTimeout(function(){ badge.style.display='none'; }, 3000); }
   toast('✓ Perfil da empresa salvo!');
+  // Save to Supabase
+  dbCall('upsert_perfil','perfis',{
+    empresa: empresa, missao: missao, visao: visao, valores: valores
+  });
 }
 
 function limparPerfil(){
@@ -1796,11 +2354,10 @@ function loadConf(){
   }catch(e){}
 }
 async function testConn(){
-  const k=document.getElementById('ak').value.trim();
-  if(!k){toast('Insira sua API key primeiro.');return;}
+  const k='server';
   const r=document.getElementById('tres');r.style.display='inline';r.textContent='Testando...';r.style.color='#94A3B8';
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-beta':'prompt-caching-2024-07-31','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:getModel(),max_tokens:10,messages:[{role:'user',content:'OK'}]})});
+    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:getModel(),max_tokens:10,messages:[{role:'user',content:'OK'}]})});
     if(res.ok){r.textContent='✓ Conexão bem-sucedida!';r.style.color='var(--ok)';}
     else{const e=await res.json();r.textContent='✗ '+(e.error?.message||'Erro');r.style.color='var(--red)';}
   }catch(e){r.textContent='✗ '+e.message;r.style.color='var(--red)';}
