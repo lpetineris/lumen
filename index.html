@@ -399,13 +399,13 @@ textarea:focus {
 }
 .bubble.u { background: var(--orange); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
 .bubble.a { background: var(--bg); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
-.chat-inp { border-top: 1px solid var(--border); padding: 12px; display: flex; gap: 8px; background: var(--bg); }
-.chat-inp input {
+.chat-inp { border-top: 1px solid var(--border); padding: 12px; display: flex; gap: 8px; background: var(--bg); align-items: flex-end; }
+.chat-inp textarea {
   flex: 1; border: 1.5px solid var(--border); border-radius: var(--rs);
   padding: 10px 13px; font-family: 'Poppins', sans-serif; font-size: 13px;
   color: var(--text); background: var(--bg2); outline: none;
 }
-.chat-inp input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(249,115,22,.1); background: var(--bg); }
+.chat-inp textarea:focus { outline: none; }
 .chat-inp button {
   background: var(--orange); color: #fff; border: none;
   border-radius: var(--rs); padding: 10px 16px; font-size: 16px;
@@ -541,17 +541,88 @@ textarea:focus {
 }
 
 @media(max-width:700px) {
-  header { padding: 0 12px; }
+  header { padding: 0 12px; height: auto; flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
   main { padding: 16px 12px 60px; }
   .hero { padding: 22px 18px; border-radius: 14px; }
   .hero h1 { font-size: 19px; }
-  .pill { padding: 5px 10px; font-size: 11px; }
   .sinp { width: 100% !important; }
   .srow { flex-wrap: wrap; }
   .rhdr { flex-direction: column; align-items: flex-start; }
   .achip { padding: 16px; }
   .achip-ico { width: 40px; height: 40px; font-size: 18px; }
   .achip-title { font-size: 14px; }
+
+  /* ── Nav abas — scroll horizontal no mobile ── */
+  nav {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px;
+    border-radius: 10px;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .pill {
+    display: inline-block;
+    padding: 6px 14px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* ── Sugestões — wrap no mobile ── */
+  .suggs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .sugg-btn {
+    flex: 1 1 auto;
+    min-width: 140px;
+    max-width: 100%;
+    text-align: center;
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  /* ── Chat bubble — remove avatar no mobile para dar mais espaço ── */
+  .lumi-avatar-wrap { display: none !important; }
+  .bubble.a { max-width: 100% !important; }
+  .chat-msgs .bubble-wrap { gap: 0 !important; }
+}
+
+@media(max-width:400px) {
+  .pill { padding: 5px 10px; font-size: 11px; }
+  .sugg-btn { font-size: 11px; padding: 7px 8px; }
+}
+
+/* ── Prevent horizontal scroll globally ── */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+* { box-sizing: border-box; }
+
+@media(max-width:700px) {
+  /* Hero icon smaller on mobile */
+  .lumi-hero-icon { width:42px !important; height:42px !important; font-size:18px !important; }
+  .lumi-hero { padding: 14px 16px !important; }
+
+  /* Prevent any element from overflowing */
+  main, .tab, .chat-box, .chat-msgs, .bubble, .arow, .tbox, textarea {
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+  }
+
+  /* Chat input area */
+  .chat-inp { padding: 10px 12px; }
+  .chat-inp textarea { font-size: 13px; }
+
+  /* Action buttons wrap */
+  .arow { flex-wrap: wrap !important; gap: 6px !important; }
+  .arow .btn, .arow .btn2 { font-size: 11px !important; padding: 7px 10px !important; }
 }
 </style>
 </head>
@@ -707,15 +778,15 @@ textarea:focus {
 
   <!-- Lumi header — mesmo estilo do hero do Analisar -->
   <div class="lumi-hero">
-    <div style="display:flex;align-items:center;gap:18px;position:relative;z-index:1">
-      <div style="width:60px;height:60px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;border:2px solid rgba(255,255,255,.35)">✦</div>
-      <div>
-        <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:3px;line-height:1.1">Lumi</div>
+    <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:1">
+      <div class="lumi-hero-icon" style="width:52px;height:52px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:2px solid rgba(255,255,255,.35)">✦</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:2px;line-height:1.1">Lumi</div>
         <div style="font-size:13px;color:rgba(255,255,255,.88);line-height:1.5">Consultora estratégica · sempre disponível</div>
-      </div>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:7px">
-        <div style="width:9px;height:9px;background:#4ade80;border-radius:50%;animation:pulse 2s infinite;box-shadow:0 0 6px #4ade80"></div>
-        <span style="font-size:12px;color:rgba(255,255,255,.9);font-weight:600">Online</span>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <div style="width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 2s infinite;box-shadow:0 0 6px #4ade80;flex-shrink:0"></div>
+          <span style="font-size:11px;color:rgba(255,255,255,.9);font-weight:600">Online</span>
+        </div>
       </div>
     </div>
   </div>
@@ -748,8 +819,8 @@ textarea:focus {
 
     <!-- Input -->
     <div class="chat-inp" style="border-top:1px solid var(--border);background:var(--bg)">
-      <input type="text" id="cinp" placeholder="Pergunte à Lumi sobre seus clientes e negócio..." onkeydown="if(event.key==='Enter')chat()" style="background:var(--bg2)">
-      <button onclick="chat()" style="background:var(--orange)">→</button>
+      <textarea id="cinp" rows="3" placeholder="Pergunte à Lumi sobre seus clientes e negócio..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chat();}" style="background:var(--bg2);resize:none;font-family:'Poppins',sans-serif;font-size:14px;border:none;outline:none;width:100%;color:var(--text);line-height:1.5;padding:0"></textarea>
+      <button onclick="chat()" style="background:var(--orange);align-self:flex-end">→</button>
     </div>
   </div>
 
