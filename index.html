@@ -1057,7 +1057,7 @@ if (window.parent && window.parent !== window) {
 // DB helper — calls Vercel proxy
 async function dbCall(action, table, data) {
   try {
-    const res = await fetch('/api/db', {
+    const res = await fetch('https://lumenmind-five.vercel.app/api/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, table, data, user_id: getUserId() })
@@ -1276,7 +1276,7 @@ async function analisar() {
   },1500);
 
   try {
-    const res=await fetch('/api/chat',{
+    const res=await fetch('https://lumenmind-five.vercel.app/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -1388,7 +1388,7 @@ async function gerarResumoConversa() {
   }).join('\n\n');
   const prompt = 'Com base na conversa abaixo, gere um RESUMO EXECUTIVO completo com os principais pontos discutidos, insights identificados e ações recomendadas. Linguagem direta para empresários. Não interrompa o texto no meio — conclua todas as frases e seções.\n\nCONVERSA:\n'+conv.slice(0,8000);
   try {
-    const res = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+    const res = await fetch('https://lumenmind-five.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:getModel(),max_tokens:2000,messages:[{role:'user',content:prompt}]})});
     const data = await res.json();
     if(!res.ok) throw new Error(data?.error?.message||'Erro');
@@ -1405,7 +1405,7 @@ async function gerarResumoExecutivo() {
   lastResumo='';
   const prompt='Com base na análise abaixo, gere um RESUMO EXECUTIVO conciso de no máximo 1 página (400-500 palavras) com linguagem direta para empresários.\n\nO resumo deve ter:\n1. **Perfil dos clientes** (quem são)\n2. **Principais percepções** (o que pensam)\n3. **Oportunidades identificadas** (onde crescer)\n4. **Ações recomendadas** (o que fazer agora)\n\nEscreva em português do Brasil.\n\nANÁLISE:\n'+S.lastText.slice(0,6000);
   try {
-    const res=await fetch('/api/chat',{
+    const res=await fetch('https://lumenmind-five.vercel.app/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -1650,7 +1650,7 @@ async function chat() {
   }
 
   try {
-    const res=await fetch('/api/chat',{
+    const res=await fetch('https://lumenmind-five.vercel.app/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:getModel(),max_tokens:800,system:systemBlocks,messages:S.chatHist.slice(-6)})
@@ -2438,7 +2438,7 @@ async function testConn(){
   const k='server';
   const r=document.getElementById('tres');r.style.display='inline';r.textContent='Testando...';r.style.color='#94A3B8';
   try{
-    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:getModel(),max_tokens:10,messages:[{role:'user',content:'OK'}]})});
+    const res=await fetch('https://lumenmind-five.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:getModel(),max_tokens:10,messages:[{role:'user',content:'OK'}]})});
     if(res.ok){r.textContent='✓ Conexão bem-sucedida!';r.style.color='var(--ok)';}
     else{const e=await res.json();r.textContent='✗ '+(e.error?.message||'Erro');r.style.color='var(--red)';}
   }catch(e){r.textContent='✗ '+e.message;r.style.color='var(--red)';}
