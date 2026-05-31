@@ -609,6 +609,10 @@ html, body {
   .lumi-hero-icon { width:42px !important; height:42px !important; font-size:18px !important; }
   .lumi-hero { padding: 14px 16px !important; }
 
+  /* Online badge — show below on mobile, hide right side */
+  .lumi-online-mobile { display:flex !important; }
+  .lumi-online-desktop { display:none !important; }
+
   /* Prevent any element from overflowing */
   main, .tab, .chat-box, .chat-msgs, .bubble, .arow, .tbox, textarea {
     max-width: 100% !important;
@@ -783,10 +787,16 @@ html, body {
       <div style="flex:1;min-width:0">
         <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:2px;line-height:1.1">Lumi</div>
         <div style="font-size:13px;color:rgba(255,255,255,.88);line-height:1.5">Consultora estratégica · sempre disponível</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+        <!-- Online badge — mobile only (below subtitle) -->
+        <div class="lumi-online-mobile" style="display:none;align-items:center;gap:6px;margin-top:4px">
           <div style="width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 2s infinite;box-shadow:0 0 6px #4ade80;flex-shrink:0"></div>
           <span style="font-size:11px;color:rgba(255,255,255,.9);font-weight:600">Online</span>
         </div>
+      </div>
+      <!-- Online badge — desktop only (right side) -->
+      <div class="lumi-online-desktop" style="margin-left:auto;display:flex;align-items:center;gap:7px">
+        <div style="width:9px;height:9px;background:#4ade80;border-radius:50%;animation:pulse 2s infinite;box-shadow:0 0 6px #4ade80"></div>
+        <span style="font-size:12px;color:rgba(255,255,255,.9);font-weight:600">Online</span>
       </div>
     </div>
   </div>
